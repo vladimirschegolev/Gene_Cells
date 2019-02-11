@@ -3,13 +3,14 @@ package main;
 import java.util.*;
 
 
-public class Cells {
+class Cells {
     static Cell[][] cells;
     static short[][] lightMap;
     static Queue<Cell> queue;
+    static Random random = new Random();
 
 
-    public static void init(int x, int y) {
+    static void init(int x, int y) {
         cells = new Cell[x][y];
         lightMap = new short[x][y];
 
@@ -19,11 +20,11 @@ public class Cells {
 
         queue = new LinkedList<>();
         queue.add(cells[x / 2][y / 2]);
-
+        random.setSeed(42);
 
     }
 
-    public static void calcLightMap() {
+    static void calcLightMap() {
         int x = lightMap.length;
         int y = lightMap[0].length;
         for (int xx = 0; xx < x; xx++) {
@@ -40,16 +41,16 @@ public class Cells {
         }
     }
 
-    public static int getWidth() {
+    static int getWidth() {
         return cells.length;
     }
 
-    public static int getHeight() {
+    static int getHeight() {
         return cells[0].length;
     }
 
 
-    public static void DoTick() {
+    static void DoTick() {
         if (queue.size() > 0) {
             int size = queue.size();
             for (int i = 0; i < size; i++) {
@@ -72,26 +73,22 @@ public class Cells {
     }
 
 
-    public static boolean check(int x, int y) {
-        if (x < 0 || y < 0 || x >= cells.length || y >= cells[0].length)
-            return false;
-        return true;
+    static boolean check(int x, int y) {
+        return x >= 0 && y >= 0 && x < cells.length && y < cells[0].length;
     }
 
-    public static boolean hasCell(int x, int y) {
-        if (cells[x][y] == null)
-            return false;
-        else return true;
+    static boolean hasCell(int x, int y) {
+        return cells[x][y] != null;
     }
-    public static void deleteCell(int x, int y) {
+    static void deleteCell(int x, int y) {
         cells[x][y] = null;
     }
 
-    public static Cell getCell(int x, int y) {
+    static Cell getCell(int x, int y) {
         return cells[x][y];
     }
 
-    public static void setCell(int x, int y, Cell cell) {
+    static void setCell(int x, int y, Cell cell) {
         cells[x][y] = cell;
     }
 }

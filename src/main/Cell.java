@@ -4,18 +4,18 @@ import java.awt.*;
 import java.util.Arrays;
 
 
-public class Cell {
+class Cell {
 
     private byte dir;
     private boolean alive = true;
-    int energy, x, y;
-
-    byte[] acts;
-    int generation;
+    private int energy;
+    int x, y;
+    private byte[] acts;
+    private int generation;
     Color color;
 
 
-    static byte[][] dirs = new byte[][]{{0, 1}, {1, 0}, {1, 1}, {0, -1}, {-1, 0}, {-1, -1}, {1, -1}, {-1, 1}};
+    private static byte[][] dirs = new byte[][]{{0, 1}, {1, 0}, {1, 1}, {0, -1}, {-1, 0}, {-1, -1}, {1, -1}, {-1, 1}};
     static int peacefulness = 10;
     static float mutation = .08f;
     static int lightPower = 250;
@@ -23,67 +23,77 @@ public class Cell {
     static int energySptitDeathGap = 400;
     static int energyLim = 1000;
     static int energyCadaver = 500;
+    private static int geneLength = 16;
 
 
-    private Cell() {
-    }
+    private Cell() {}
 
 
-    public Cell(int x, int y) {
+    Cell(int x, int y) {
         this.x = x;
         this.y = y;
         energy = 50;
-        dir = (byte) (Math.random() * 8);
+        dir = (byte) Cells.random.nextInt(8);
         acts = new byte[]{0};
         color = Color.GREEN;
         generation = 1;
     }
 
-    public Cell(Cell parent, int x, int y) {
+    private Cell(Cell parent, int x, int y) {
         this.x = x;
         this.y = y;
         energy = parent.energy;
-        dir = (byte) (Math.random() * 8);
+        dir = (byte) Cells.random.nextInt(8);
         generation = parent.generation;
-        if (Math.random() < mutation) {
+
+        if (Cells.random.nextDouble() < mutation) {
             generation = parent.generation + 1;
 
-            if (Math.random() > .8) {
+            double r = Cells.random.nextDouble();
+            if (parent.acts.length < geneLength && r > .66) {
                 acts = new byte[parent.acts.length + 1];
                 System.arraycopy(parent.acts, 0, acts, 0, parent.acts.length);
-                acts[parent.acts.length] = (byte) (Math.random() * 5);
+                acts[parent.acts.length] = (byte) Cells.random.nextInt(5);
+            } else if (parent.acts.length > 1 && r > .33) {
+                int remove = Cells.random.nextInt(parent.acts.length);
+                acts = new byte[parent.acts.length - 1];
+                for (int i = 0; i < parent.acts.length; i++) {
+                    if (i < remove) {
+                        acts[i] = parent.acts[i];
+                    } else if (i > remove) {
+                        acts[i - 1] = parent.acts[i];
+                    }
+                }
             } else {
                 acts = Arrays.copyOf(parent.acts, parent.acts.length);
-                acts[(int) (Math.random() * acts.length)] = (byte) (Math.random() * 5);
+                acts[Cells.random.nextInt(acts.length)] = (byte) Cells.random.nextInt(8);
             }
-
-
             color = calcColor();
         } else {
             acts = Arrays.copyOf(parent.acts, parent.acts.length);
             color = parent.color;
         }
-
     }
+
 
     private Color calcColor() {
         int sum = 0, r, g, b;
-        for (int i = 0; i < acts.length; i++) {
-            sum += acts[i];
+        for (byte act : acts) {
+            sum += act;
         }
 
-        r = (acts.length * 37+ 100) % 255;
+        r = (acts.length * 15) % 255;
         g = (sum * 7 + 100) % 255;
         b = (generation * 3) % 255;
         return new Color(r, g, b);
     }
 
-    public boolean act() {
+    boolean act() {
         energy -= energyStep * acts.length;
         cycle:
-        for (int i = 0; i < acts.length; i++) {
+        for (int i = 0, count = 0; count < 20; count++) {
 
-            switch (acts[i]) {
+            switch (acts[i % acts.length]) {
                 case 0:
                     grow();
                     break cycle;
@@ -98,7 +108,7 @@ public class Cell {
                     break;
                 case 4:
                     if (move()) {
-                        Cells.deleteCell(x,y);
+                        Cells.deleteCell(x, y);
                         return false;
                     }
                     break cycle;
@@ -124,9 +134,9 @@ public class Cell {
 
     private void split() {
 
-        int rand = (int) (Math.random() * 50);
+        //int rand = (int) (Math.random() * 50);
         for (int i = 0; i < 8; i++) {
-            int j = (i + rand) % 8;
+            int j = Cells.random.nextInt(8);
             int xx = x + dirs[j][0];
             int yy = y + dirs[j][1];
             if (Cells.check(xx, yy) && !Cells.hasCell(xx, yy)) {
@@ -204,14 +214,13 @@ public class Cell {
         this.y = y;
     }
 
-    public boolean isAlive() {
+    boolean isAlive() {
         return alive;
     }
 
-    public Cell kill() {
+    private void kill() {
         alive = false;
         color = Color.LIGHT_GRAY;
-        return this;
     }
 
 }
