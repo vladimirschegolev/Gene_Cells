@@ -1,11 +1,8 @@
 package main;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -13,26 +10,26 @@ import java.util.concurrent.locks.ReentrantLock;
  * Created by Motoko on 09.03.2017.
  */
 public class Frame extends JFrame {
-    static Thread thread;
-    static JFrame frame;
-    static Lock lock = new ReentrantLock();
-    static boolean hasLock = false;
-    static int ms = 100;
+
+    private static Frame frame;
+    private static Lock lock = new ReentrantLock();
+    private static boolean hasLock = false;
+    private static int sleepSimulation = 0, sleepRepaint = 33;
     private static int count = 0;
     private static JLabel info;
 
-    JTextField width, height;
+    private JTextField width, height;
+    private PaintPanel paintPan;
 
-    public Frame() throws HeadlessException {
+    private Frame() throws HeadlessException {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(true);
         setTitle("Gene Cells");
-
         setLayout(new BorderLayout());
-        add(new PaintPanel(), BorderLayout.CENTER);
+        paintPan = new PaintPanel();
+        add(paintPan, BorderLayout.CENTER);
 
-        JPanel instruments = new JPanel();
-        instruments.setLayout(new GridLayout(11, 1));
+
         JButton reset = new JButton("Сброс");
         reset.addActionListener(new AbstractAction() {
             @Override
@@ -53,6 +50,7 @@ public class Frame extends JFrame {
                 lock.unlock();
             }
         });
+
         JButton start = new JButton("Пауза");
         start.addActionListener(new AbstractAction() {
 
@@ -70,48 +68,53 @@ public class Frame extends JFrame {
             }
         });
 
-        JSlider light = new JSlider(20, 500);
-        light.setValue(Cell.lightPower);
-        light.setMajorTickSpacing(80);
-        light.setMinorTickSpacing(10);
-        light.setPaintTicks(true);
-        light.setPaintLabels(true);
-        light.setBorder(BorderFactory.createTitledBorder("Интенсивность света"));
-        light.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                Cell.lightPower = light.getValue();
-                Cells.calcLightMap();
-            }
+        JSlider stepSimulation = new JSlider(0, 100);
+        stepSimulation.setValue(sleepSimulation);
+        stepSimulation.setMajorTickSpacing(10);
+        stepSimulation.setMinorTickSpacing(2);
+        stepSimulation.setPaintTicks(true);
+        stepSimulation.setPaintLabels(true);
+        stepSimulation.setBorder(BorderFactory.createTitledBorder("Шаг симуляции(мс)"));
+        stepSimulation.addChangeListener(e -> sleepSimulation = stepSimulation.getValue());
+
+        JSlider stepRepaint = new JSlider(10, 100);
+        stepRepaint.setValue(sleepRepaint);
+        stepRepaint.setMajorTickSpacing(10);
+        stepRepaint.setMinorTickSpacing(2);
+        stepRepaint.setPaintTicks(true);
+        stepRepaint.setPaintLabels(true);
+        stepRepaint.setBorder(BorderFactory.createTitledBorder("Шаг перерисовки(мс)"));
+        stepRepaint.addChangeListener(e -> sleepRepaint = stepRepaint.getValue());
+
+        JSlider lightPower = new JSlider(20, 500);
+        lightPower.setValue(Cell.lightPower);
+        lightPower.setMajorTickSpacing(80);
+        lightPower.setMinorTickSpacing(10);
+        lightPower.setPaintTicks(true);
+        lightPower.setPaintLabels(true);
+        lightPower.setBorder(BorderFactory.createTitledBorder("Интенсивность света"));
+        lightPower.addChangeListener(e -> {
+            Cell.lightPower = lightPower.getValue();
+            Cells.calcLightMap();
         });
 
-        JSlider mut = new JSlider(0, 30);
-        mut.setValue((int) (Cell.mutation * 100));
-        mut.setMajorTickSpacing(10);
-        mut.setMinorTickSpacing(1);
-        mut.setPaintTicks(true);
-        mut.setPaintLabels(true);
-        mut.setBorder(BorderFactory.createTitledBorder("Шанс мутации"));
-        mut.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                Cell.mutation = (float) mut.getValue() / 100;
-            }
-        });
+        JSlider mutation = new JSlider(0, 30);
+        mutation.setValue((int) (Cell.mutation * 100));
+        mutation.setMajorTickSpacing(10);
+        mutation.setMinorTickSpacing(1);
+        mutation.setPaintTicks(true);
+        mutation.setPaintLabels(true);
+        mutation.setBorder(BorderFactory.createTitledBorder("Шанс мутации"));
+        mutation.addChangeListener(e -> Cell.mutation = (float) mutation.getValue() / 100);
 
-        JSlider peace = new JSlider(0, 20);
-        peace.setValue(Cell.peacefulness);
-        peace.setMajorTickSpacing(10);
-        peace.setMinorTickSpacing(1);
-        peace.setPaintTicks(true);
-        peace.setPaintLabels(true);
-        peace.setBorder(BorderFactory.createTitledBorder("Миролюбивость"));
-        peace.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                Cell.peacefulness = peace.getValue();
-            }
-        });
+        JSlider peacefulpess = new JSlider(0, 20);
+        peacefulpess.setValue(Cell.peacefulness);
+        peacefulpess.setMajorTickSpacing(10);
+        peacefulpess.setMinorTickSpacing(1);
+        peacefulpess.setPaintTicks(true);
+        peacefulpess.setPaintLabels(true);
+        peacefulpess.setBorder(BorderFactory.createTitledBorder("Миролюбивость"));
+        peacefulpess.addChangeListener(e -> Cell.peacefulness = peacefulpess.getValue());
 
         JSlider energyLim = new JSlider(100, 2100);
         energyLim.setValue(Cell.energyLim);
@@ -120,12 +123,7 @@ public class Frame extends JFrame {
         energyLim.setPaintTicks(true);
         energyLim.setPaintLabels(true);
         energyLim.setBorder(BorderFactory.createTitledBorder("Предел энергии"));
-        energyLim.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                Cell.energyLim = energyLim.getValue();
-            }
-        });
+        energyLim.addChangeListener(e -> Cell.energyLim = energyLim.getValue());
 
         JSlider energyGap = new JSlider(0, 500);
         energyGap.setValue(Cell.energySptitDeathGap);
@@ -134,12 +132,7 @@ public class Frame extends JFrame {
         energyGap.setPaintTicks(true);
         energyGap.setPaintLabels(true);
         energyGap.setBorder(BorderFactory.createTitledBorder("Зона размножения"));
-        energyGap.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                Cell.energySptitDeathGap = energyGap.getValue();
-            }
-        });
+        energyGap.addChangeListener(e -> Cell.energySptitDeathGap = energyGap.getValue());
 
         JSlider energyStep = new JSlider(0, 100);
         energyStep.setValue(Cell.energyStep);
@@ -148,26 +141,8 @@ public class Frame extends JFrame {
         energyStep.setPaintTicks(true);
         energyStep.setPaintLabels(true);
         energyStep.setBorder(BorderFactory.createTitledBorder("Расход энергии за действие"));
-        energyStep.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                Cell.energyStep = energyStep.getValue();
-            }
-        });
+        energyStep.addChangeListener(e -> Cell.energyStep = energyStep.getValue());
 
-        JSlider step = new JSlider(0, 100);
-        step.setValue(ms);
-        step.setMajorTickSpacing(10);
-        step.setMinorTickSpacing(2);
-        step.setPaintTicks(true);
-        step.setPaintLabels(true);
-        step.setBorder(BorderFactory.createTitledBorder("Шаг симуляции(мс)"));
-        step.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                ms = step.getValue();
-            }
-        });
 
         JSlider energyCadaver = new JSlider(50, 1050);
         energyCadaver.setValue(Cell.energyCadaver);
@@ -176,12 +151,7 @@ public class Frame extends JFrame {
         energyCadaver.setPaintTicks(true);
         energyCadaver.setPaintLabels(true);
         energyCadaver.setBorder(BorderFactory.createTitledBorder("Калорийность трупа"));
-        energyCadaver.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                Cell.energyCadaver = energyCadaver.getValue();
-            }
-        });
+        energyCadaver.addChangeListener(e -> Cell.energyCadaver = energyCadaver.getValue());
 
         JPanel size = new JPanel(new GridBagLayout());
         size.setBorder(BorderFactory.createTitledBorder("Соотношение сторон"));
@@ -210,12 +180,15 @@ public class Frame extends JFrame {
 
         info = new JLabel();
 
+        JPanel instruments = new JPanel();
+        instruments.setLayout(new GridLayout(12, 1));
         instruments.add(size);
         instruments.add(start);
-        instruments.add(step);
-        instruments.add(light);
-        instruments.add(mut);
-        instruments.add(peace);
+        instruments.add(stepSimulation);
+        instruments.add(stepRepaint);
+        instruments.add(lightPower);
+        instruments.add(mutation);
+        instruments.add(peacefulpess);
         instruments.add(energyLim);
         instruments.add(energyGap);
         instruments.add(energyStep);
@@ -232,12 +205,17 @@ public class Frame extends JFrame {
 
     public static void main(String[] args) {
 
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ignored) {
+        }
+
         Cells.init(500, 500);
         frame = new Frame();
         new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(ms);
+                    Thread.sleep(sleepSimulation);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -250,15 +228,21 @@ public class Frame extends JFrame {
             }
         }).start();
 
-        while (true) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(sleepRepaint);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                frame.getPaintPanel().repaint();
             }
-            frame.getContentPane().repaint();
-        }
+        }).start();
 
 
+    }
+
+    private Component getPaintPanel() {
+        return paintPan;
     }
 }
