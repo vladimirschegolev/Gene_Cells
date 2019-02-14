@@ -16,7 +16,7 @@ public class Frame extends JFrame {
     private static Lock lock = new ReentrantLock();
     private static boolean hasLock = false;
     private static int sleepSimulation = 0, sleepRepaint = 33;
-    private static int count = 0;
+    private static int count = 0, lightDevider = 10;
     private static JLabel info;
 
     private JTextField width, height;
@@ -75,10 +75,10 @@ public class Frame extends JFrame {
         stepSimulation.setMinorTickSpacing(2);
         stepSimulation.setPaintTicks(true);
         stepSimulation.setPaintLabels(true);
-        stepSimulation.setBorder(BorderFactory.createTitledBorder("Шаг симуляции(" + sleepSimulation + " мс)"));
+        stepSimulation.setBorder(BorderFactory.createTitledBorder("Шаг симуляции " + sleepSimulation + " мс"));
         stepSimulation.addChangeListener(e -> {
             sleepSimulation = stepSimulation.getValue();
-            ((TitledBorder)stepSimulation.getBorder()).setTitle("Шаг симуляции(" + sleepSimulation + " мс)");
+            ((TitledBorder)stepSimulation.getBorder()).setTitle("Шаг симуляции " + sleepSimulation + " мс");
             stepSimulation.repaint();
         });
 
@@ -88,10 +88,10 @@ public class Frame extends JFrame {
         stepRepaint.setMinorTickSpacing(2);
         stepRepaint.setPaintTicks(true);
         stepRepaint.setPaintLabels(true);
-        stepRepaint.setBorder(BorderFactory.createTitledBorder("Шаг перерисовки(" + sleepRepaint + " мс)"));
+        stepRepaint.setBorder(BorderFactory.createTitledBorder("Шаг перерисовки " + sleepRepaint + " мс"));
         stepRepaint.addChangeListener(e -> {
             sleepRepaint = stepRepaint.getValue();
-            ((TitledBorder)stepRepaint.getBorder()).setTitle("Шаг перерисовки(" + sleepRepaint + " мс)");
+            ((TitledBorder)stepRepaint.getBorder()).setTitle("Шаг перерисовки " + sleepRepaint + " мс");
             stepRepaint.repaint();
         });
 
@@ -101,11 +101,11 @@ public class Frame extends JFrame {
         lightPower.setMinorTickSpacing(10);
         lightPower.setPaintTicks(true);
         lightPower.setPaintLabels(true);
-        lightPower.setBorder(BorderFactory.createTitledBorder("Интенсивность света(" + lightPower.getValue() + ")"));
+        lightPower.setBorder(BorderFactory.createTitledBorder("Интенсивность света " + lightPower.getValue()));
         lightPower.addChangeListener(e -> {
             Cell.lightPower = lightPower.getValue();
             Cells.calcLightMap();
-            ((TitledBorder)lightPower.getBorder()).setTitle("Интенсивность света(" + lightPower.getValue() + ")");
+            ((TitledBorder)lightPower.getBorder()).setTitle("Интенсивность света " + lightPower.getValue());
             lightPower.repaint();
         });
 
@@ -115,10 +115,10 @@ public class Frame extends JFrame {
         mutation.setMinorTickSpacing(1);
         mutation.setPaintTicks(true);
         mutation.setPaintLabels(true);
-        mutation.setBorder(BorderFactory.createTitledBorder("Шанс мутации(" + mutation.getValue() + "%)"));
+        mutation.setBorder(BorderFactory.createTitledBorder("Шанс мутации " + mutation.getValue() + "%"));
         mutation.addChangeListener(e -> {
             Cell.mutation = (float) mutation.getValue() / 100;
-            ((TitledBorder)mutation.getBorder()).setTitle("Шанс мутации(" + mutation.getValue() + "%)");
+            ((TitledBorder)mutation.getBorder()).setTitle("Шанс мутации " + mutation.getValue() + "%");
             mutation.repaint();
         });
 
@@ -128,10 +128,10 @@ public class Frame extends JFrame {
         peacefulpess.setMinorTickSpacing(1);
         peacefulpess.setPaintTicks(true);
         peacefulpess.setPaintLabels(true);
-        peacefulpess.setBorder(BorderFactory.createTitledBorder("Миролюбивость(" + peacefulpess.getValue() + ")"));
+        peacefulpess.setBorder(BorderFactory.createTitledBorder("Миролюбивость " + peacefulpess.getValue()));
         peacefulpess.addChangeListener(e -> {
             Cell.peacefulness = peacefulpess.getValue();
-            ((TitledBorder)peacefulpess.getBorder()).setTitle("Миролюбивость(" + peacefulpess.getValue() + ")");
+            ((TitledBorder)peacefulpess.getBorder()).setTitle("Миролюбивость " + peacefulpess.getValue());
             peacefulpess.repaint();
         });
 
@@ -141,10 +141,10 @@ public class Frame extends JFrame {
         energyLim.setMinorTickSpacing(100);
         energyLim.setPaintTicks(true);
         energyLim.setPaintLabels(true);
-        energyLim.setBorder(BorderFactory.createTitledBorder("Предел энергии(" + energyLim.getValue() + ")"));
+        energyLim.setBorder(BorderFactory.createTitledBorder("Предел энергии " + energyLim.getValue()));
         energyLim.addChangeListener(e -> {
             Cell.energyLim = energyLim.getValue();
-            ((TitledBorder)energyLim.getBorder()).setTitle("Предел энергии(" + energyLim.getValue() + ")");
+            ((TitledBorder)energyLim.getBorder()).setTitle("Предел энергии " + energyLim.getValue());
             energyLim.repaint();
         });
 
@@ -154,10 +154,10 @@ public class Frame extends JFrame {
         energyGap.setMinorTickSpacing(10);
         energyGap.setPaintTicks(true);
         energyGap.setPaintLabels(true);
-        energyGap.setBorder(BorderFactory.createTitledBorder("Зона размножения"));
+        energyGap.setBorder(BorderFactory.createTitledBorder("Зона размножения " + energyGap.getValue() + "%"));
         energyGap.addChangeListener(e -> {
             Cell.energySptitDeathGap = energyGap.getValue();
-            ((TitledBorder)energyGap.getBorder()).setTitle("Зона размножения(" + energyGap.getValue() + "%)");
+            ((TitledBorder)energyGap.getBorder()).setTitle("Зона размножения " + energyGap.getValue() + "%");
             energyGap.repaint();
         });
 
@@ -167,10 +167,10 @@ public class Frame extends JFrame {
         energyStep.setMinorTickSpacing(2);
         energyStep.setPaintTicks(true);
         energyStep.setPaintLabels(true);
-        energyStep.setBorder(BorderFactory.createTitledBorder("Расход энергии за действие(" + energyStep.getValue() + ")"));
+        energyStep.setBorder(BorderFactory.createTitledBorder("Расход энергии за действие " + energyStep.getValue()));
         energyStep.addChangeListener(e -> {
             Cell.energyStep = energyStep.getValue();
-            ((TitledBorder)energyStep.getBorder()).setTitle("Расход энергии за действие(" + energyStep.getValue() + ")");
+            ((TitledBorder)energyStep.getBorder()).setTitle("Расход энергии за действие " + energyStep.getValue());
             energyStep.repaint();
         });
 
@@ -186,6 +186,19 @@ public class Frame extends JFrame {
 //            ((TitledBorder)energyCadaver.getBorder()).setTitle("Калорийность трупа(" + energyCadaver.getValue() + ")");
 //            energyCadaver.repaint();
 //        });
+
+        JSlider rotationLight = new JSlider(1, 100);
+        rotationLight.setValue(Cell.energyStep);
+        rotationLight.setMajorTickSpacing(10);
+        rotationLight.setMinorTickSpacing(2);
+        rotationLight.setPaintTicks(true);
+        rotationLight.setPaintLabels(true);
+        rotationLight.setBorder(BorderFactory.createTitledBorder("Задержка вращения " + lightDevider));
+        rotationLight.addChangeListener(e -> {
+            lightDevider = rotationLight.getValue();
+            ((TitledBorder)rotationLight.getBorder()).setTitle("Расход энергии за действие" + rotationLight.getValue());
+            rotationLight.repaint();
+        });
 
 
 
@@ -228,7 +241,7 @@ public class Frame extends JFrame {
         instruments.add(energyLim);
         instruments.add(energyGap);
         instruments.add(energyStep);
-//        instruments.add(energyCadaver);
+        instruments.add(rotationLight);
         instruments.add(info);
 
         instruments.setPreferredSize(new Dimension(200, 200));
@@ -262,6 +275,19 @@ public class Frame extends JFrame {
                 info.setText(String.format("<html> Итерация: %d<br>Количество клеток: %d<br>Время тика (мс): %d<html>", count++, Cells.queue.size(), System.currentTimeMillis() - start));
 
             }
+        }).start();
+
+        new Thread(() -> {
+                while (true) {
+                    try {
+                        Thread.sleep(sleepSimulation);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    if (count % lightDevider == 0) {
+                        Cells.calcLightMapDynamic();
+                    }
+                }
         }).start();
 
         new Thread(() -> {

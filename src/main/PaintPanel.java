@@ -6,10 +6,6 @@ import java.awt.*;
 
 public class PaintPanel extends JPanel {
 
-    public PaintPanel() {
-
-    }
-
     @Override
     public void paintComponent(Graphics g) {
         g.setColor(Color.black);

@@ -8,6 +8,8 @@ class Cells {
     static short[][] lightMap;
     static Queue<Cell> queue;
     static Random random = new Random();
+    private static int count;
+    private static final double ROTATE_SPEED = Math.PI / 200;
 
 
     static void init(int x, int y) {
@@ -21,6 +23,8 @@ class Cells {
         queue = new LinkedList<>();
         queue.add(cells[x / 2][y / 2]);
         random.setSeed(42);
+
+        count = 0;
 
     }
 
@@ -42,20 +46,23 @@ class Cells {
     }
 
     static void calcLightMapDynamic() {
-        int x = lightMap.length;
-        int y = lightMap[0].length;
-        for (int xx = 0; xx < x; xx++) {
-            for (int yy = 0; yy < y; yy++) {
-                int offX = Math.abs(x / 2 - xx);
-                int offY = Math.abs(y / 2 - yy);
+        int w = lightMap.length;
+        int h = lightMap[0].length;
+        int x_0 = (int) (w * (Math.sin(ROTATE_SPEED * count) + 2) / 4);
+        int y_0 = (int) (h * (Math.cos(ROTATE_SPEED * count) + 2) / 4);
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                int offX = x_0 - x;
+                int offY = y_0 - y;
                 int dist = (int) Math.sqrt(offX * offX + offY * offY);
                 if (dist < Cell.lightPower) {
-                    lightMap[xx][yy] = (short) (Cell.lightPower - dist);
+                    lightMap[x][y] = (short) (Cell.lightPower - dist);
                 } else {
-                    lightMap[xx][yy] = 0;
+                    lightMap[x][y] = 0;
                 }
             }
         }
+        count++;
     }
 
     static int getWidth() {
@@ -97,6 +104,7 @@ class Cells {
     static boolean hasCell(int x, int y) {
         return cells[x][y] != null;
     }
+
     static void deleteCell(int x, int y) {
         cells[x][y] = null;
     }

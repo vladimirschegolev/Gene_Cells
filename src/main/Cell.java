@@ -18,7 +18,7 @@ class Cell {
     private static byte[][] dirs = new byte[][]{{0, 1}, {1, 0}, {1, 1}, {0, -1}, {-1, 0}, {-1, -1}, {1, -1}, {-1, 1}};
     static int peacefulness = 10;
     static float mutation = .08f;
-    static int lightPower = 250;
+    static int lightPower = 150;
     static int energyStep = 25;
     static int energySptitDeathGap = 50;
     static int energyLim = 1000;
