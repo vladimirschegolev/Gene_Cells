@@ -88,7 +88,7 @@ public class Frame extends JFrame {
         stepRepaint.setMinorTickSpacing(2);
         stepRepaint.setPaintTicks(true);
         stepRepaint.setPaintLabels(true);
-        stepRepaint.setBorder(BorderFactory.createTitledBorder("Шаг перерисовки(" + sleepSimulation + " мс)"));
+        stepRepaint.setBorder(BorderFactory.createTitledBorder("Шаг перерисовки(" + sleepRepaint + " мс)"));
         stepRepaint.addChangeListener(e -> {
             sleepRepaint = stepRepaint.getValue();
             ((TitledBorder)stepRepaint.getBorder()).setTitle("Шаг перерисовки(" + sleepRepaint + " мс)");
@@ -148,7 +148,7 @@ public class Frame extends JFrame {
             energyLim.repaint();
         });
 
-        JSlider energyGap = new JSlider(0, 90);
+        JSlider energyGap = new JSlider(20, 100);
         energyGap.setValue(Cell.energySptitDeathGap);
         energyGap.setMajorTickSpacing(20);
         energyGap.setMinorTickSpacing(10);
@@ -174,18 +174,18 @@ public class Frame extends JFrame {
             energyStep.repaint();
         });
 
-        JSlider energyCadaver = new JSlider(50, 1001);
-        energyCadaver.setValue(Cell.energyCadaver);
-        energyCadaver.setMajorTickSpacing(150);
-        energyCadaver.setMinorTickSpacing(100);
-        energyCadaver.setPaintTicks(true);
-        energyCadaver.setPaintLabels(true);
-        energyCadaver.setBorder(BorderFactory.createTitledBorder("Калорийность трупа(" + energyCadaver.getValue() + ")"));
-        energyCadaver.addChangeListener(e -> {
-            Cell.energyCadaver = energyCadaver.getValue();
-            ((TitledBorder)energyCadaver.getBorder()).setTitle("Калорийность трупа(" + energyCadaver.getValue() + ")");
-            energyCadaver.repaint();
-        });
+//        JSlider energyCadaver = new JSlider(50, 1001);
+//        energyCadaver.setValue(Cell.energyCadaver);
+//        energyCadaver.setMajorTickSpacing(150);
+//        energyCadaver.setMinorTickSpacing(100);
+//        energyCadaver.setPaintTicks(true);
+//        energyCadaver.setPaintLabels(true);
+//        energyCadaver.setBorder(BorderFactory.createTitledBorder("Калорийность трупа(" + energyCadaver.getValue() + ")"));
+//        energyCadaver.addChangeListener(e -> {
+//            Cell.energyCadaver = energyCadaver.getValue();
+//            ((TitledBorder)energyCadaver.getBorder()).setTitle("Калорийность трупа(" + energyCadaver.getValue() + ")");
+//            energyCadaver.repaint();
+//        });
 
 
 
@@ -228,7 +228,7 @@ public class Frame extends JFrame {
         instruments.add(energyLim);
         instruments.add(energyGap);
         instruments.add(energyStep);
-        instruments.add(energyCadaver);
+//        instruments.add(energyCadaver);
         instruments.add(info);
 
         instruments.setPreferredSize(new Dimension(200, 200));

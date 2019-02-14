@@ -41,6 +41,23 @@ class Cells {
         }
     }
 
+    static void calcLightMapDynamic() {
+        int x = lightMap.length;
+        int y = lightMap[0].length;
+        for (int xx = 0; xx < x; xx++) {
+            for (int yy = 0; yy < y; yy++) {
+                int offX = Math.abs(x / 2 - xx);
+                int offY = Math.abs(y / 2 - yy);
+                int dist = (int) Math.sqrt(offX * offX + offY * offY);
+                if (dist < Cell.lightPower) {
+                    lightMap[xx][yy] = (short) (Cell.lightPower - dist);
+                } else {
+                    lightMap[xx][yy] = 0;
+                }
+            }
+        }
+    }
+
     static int getWidth() {
         return cells.length;
     }

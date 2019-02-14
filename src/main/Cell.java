@@ -22,8 +22,7 @@ class Cell {
     static int energyStep = 25;
     static int energySptitDeathGap = 50;
     static int energyLim = 1000;
-    static int energyCadaver = 500;
-    private static int geneLength = 30;
+    private final static int geneLength = 60;
 
 
     private Cell() {}
@@ -84,20 +83,16 @@ class Cell {
         int r, g, b;
 
         r = (acts.length * 15) % 255;
-        g = Math.abs(200 - generation * 3) % 255;
+        g = Math.abs(200 - generation * 10) % 255;
         b = (parent.color.getBlue() + 5) % 255;
         return new Color(r, g, b);
     }
 
     boolean act() {
-        energy -= energyStep * acts.length;
         cycle:
         for (int count = 0; count < 20; count++) {
-
+            energy -= energyStep;
             switch (acts[Math.abs(index++ % acts.length)]) {
-                case -1:
-                    energy += energyStep * acts.length - 5;
-                    break cycle;
                 case 0:
                     grow();
                     break cycle;
@@ -126,8 +121,13 @@ class Cell {
         if (energy >= (energyLim * energySptitDeathGap)/100) {
             split();
         }
-        if ((energy > energyLim || energy <= 0)) {
+        if (energy > energyLim) {
             kill();
+            return false;
+        }
+        if (energy < 0) {
+            energy = energyStep;
+            starve();
             return false;
         }
 
@@ -153,10 +153,10 @@ class Cell {
         }
     }
 
-    private int observe() {   // 1 - bad, 0 - good
+    private int observe() {   // 0 - good
         int xx = dirs[dir][0] + x, yy = dirs[dir][1] + y;
 
-        if (xx < 0 || xx >= Cells.getWidth() || yy < 0 || yy >= Cells.getHeight())
+        if (xx < 0 || xx >= Cells.getWidth() || yy < 0 || yy >= Cells.getHeight())  //out of field
             return 1;
 
         else if (Cells.hasCell(xx, yy)) {
@@ -164,17 +164,17 @@ class Cell {
             if (!c.isAlive()) {
                 return 0;
             } else {
-                if (peacefulness > Math.abs(c.generation - generation)) {
+                if (isRelative(c)) {
                     return 1;
-                } else if (acts.length > c.acts.length) {
+                } else if (isWeaker(c)) {
                     return 0;
                 } else {
-                    return 1;
+                    return 2;
                 }
             }
         } else {
             if (Cells.lightMap[x][y] > Cells.lightMap[xx][yy] || Cells.lightMap[xx][yy] == 0) {
-                return 1;
+                return 3;
             } else {
                 return 0;
             }
@@ -191,18 +191,18 @@ class Cell {
         if (Cells.hasCell(newX, newY)) {
             Cell c = Cells.getCell(newX, newY);
             if (c.isAlive()) {
-                if (peacefulness < Math.abs(c.generation - generation)) {
-                    if (acts.length > c.acts.length) {
-                        energy += energyCadaver + c.energy;
+                if (isRelative(c)) {
+                    if (isWeaker(c)) {
+                        eatCell(c);
                         c.kill();
                         step(newX, newY);
                     } else {
-                        c.energy += energy + energyCadaver;
+                        c.eatCell(this);
                         return true;
                     }
                 }
             } else {
-                energy += energyCadaver;
+                eatCell(c);
                 step(newX, newY);
             }
         } else {
@@ -226,6 +226,23 @@ class Cell {
     private void kill() {
         alive = false;
         color = Color.LIGHT_GRAY;
+    }
+
+    private void starve() {
+        alive = false;
+        color = Color.DARK_GRAY;
+    }
+
+    private boolean isRelative(Cell c) {
+        return peacefulness < Math.abs(c.generation - generation);
+    }
+
+    private boolean isWeaker(Cell c) {
+        return energy * acts.length > c.energy * c.acts.length;
+    }
+
+    private void eatCell(Cell c) {
+        energy += c.energy;
     }
 
 }
