@@ -8,7 +8,7 @@ class Cell {
 
     private byte dir;
     private boolean alive = true;
-    private int energy;
+    private int energy, index = 0;
     int x, y;
     private byte[] acts;
     private int generation;
@@ -20,10 +20,10 @@ class Cell {
     static float mutation = .08f;
     static int lightPower = 250;
     static int energyStep = 25;
-    static int energySptitDeathGap = 400;
+    static int energySptitDeathGap = 50;
     static int energyLim = 1000;
     static int energyCadaver = 500;
-    private static int geneLength = 16;
+    private static int geneLength = 30;
 
 
     private Cell() {}
@@ -53,7 +53,7 @@ class Cell {
             if (parent.acts.length < geneLength && r > .66) {
                 acts = new byte[parent.acts.length + 1];
                 System.arraycopy(parent.acts, 0, acts, 0, parent.acts.length);
-                acts[parent.acts.length] = (byte) Cells.random.nextInt(5);
+                acts[parent.acts.length] = getRandAct();
             } else if (parent.acts.length > 1 && r > .33) {
                 int remove = Cells.random.nextInt(parent.acts.length);
                 acts = new byte[parent.acts.length - 1];
@@ -66,39 +66,43 @@ class Cell {
                 }
             } else {
                 acts = Arrays.copyOf(parent.acts, parent.acts.length);
-                acts[Cells.random.nextInt(acts.length)] = (byte) Cells.random.nextInt(8);
+                acts[Cells.random.nextInt(acts.length)] = getRandAct();
             }
-            color = calcColor();
+            color = calcColor(parent);
         } else {
             acts = Arrays.copyOf(parent.acts, parent.acts.length);
             color = parent.color;
         }
     }
 
+    private byte getRandAct() {
+        return (byte) (Cells.random.nextInt(11) - 5);
+    }
 
-    private Color calcColor() {
-        int sum = 0, r, g, b;
-        for (byte act : acts) {
-            sum += act;
-        }
+
+    private Color calcColor(Cell parent) {
+        int r, g, b;
 
         r = (acts.length * 15) % 255;
-        g = (sum * 7 + 100) % 255;
-        b = (generation * 3) % 255;
+        g = Math.abs(200 - generation * 3) % 255;
+        b = (parent.color.getBlue() + 5) % 255;
         return new Color(r, g, b);
     }
 
     boolean act() {
         energy -= energyStep * acts.length;
         cycle:
-        for (int i = 0, count = 0; count < 20; count++) {
+        for (int count = 0; count < 20; count++) {
 
-            switch (acts[i % acts.length]) {
+            switch (acts[Math.abs(index++ % acts.length)]) {
+                case -1:
+                    energy += energyStep * acts.length - 5;
+                    break cycle;
                 case 0:
                     grow();
                     break cycle;
                 case 1:
-                    i += observe();
+                    index += observe();
                     break;
                 case 2:
                     if (++dir > 7) dir = 0;
@@ -112,12 +116,14 @@ class Cell {
                         return false;
                     }
                     break cycle;
+                case 5:
+                    index += acts[Math.abs(++index % acts.length)];
 
             }
         }
 
 
-        if (energy >= energyLim - energySptitDeathGap) {
+        if (energy >= (energyLim * energySptitDeathGap)/100) {
             split();
         }
         if ((energy > energyLim || energy <= 0)) {
@@ -134,13 +140,12 @@ class Cell {
 
     private void split() {
 
-        //int rand = (int) (Math.random() * 50);
         for (int i = 0; i < 8; i++) {
             int j = Cells.random.nextInt(8);
             int xx = x + dirs[j][0];
             int yy = y + dirs[j][1];
             if (Cells.check(xx, yy) && !Cells.hasCell(xx, yy)) {
-                energy = energy / 2;
+                energy = (int) (energy * .4);
                 Cells.setCell(xx, yy, new Cell(this, xx, yy));
                 Cells.queue.add(Cells.cells[xx][yy]);
                 return;

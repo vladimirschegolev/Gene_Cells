@@ -1,6 +1,7 @@
 package main;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.concurrent.locks.Lock;
@@ -74,8 +75,12 @@ public class Frame extends JFrame {
         stepSimulation.setMinorTickSpacing(2);
         stepSimulation.setPaintTicks(true);
         stepSimulation.setPaintLabels(true);
-        stepSimulation.setBorder(BorderFactory.createTitledBorder("Шаг симуляции(мс)"));
-        stepSimulation.addChangeListener(e -> sleepSimulation = stepSimulation.getValue());
+        stepSimulation.setBorder(BorderFactory.createTitledBorder("Шаг симуляции(" + sleepSimulation + " мс)"));
+        stepSimulation.addChangeListener(e -> {
+            sleepSimulation = stepSimulation.getValue();
+            ((TitledBorder)stepSimulation.getBorder()).setTitle("Шаг симуляции(" + sleepSimulation + " мс)");
+            stepSimulation.repaint();
+        });
 
         JSlider stepRepaint = new JSlider(10, 100);
         stepRepaint.setValue(sleepRepaint);
@@ -83,8 +88,12 @@ public class Frame extends JFrame {
         stepRepaint.setMinorTickSpacing(2);
         stepRepaint.setPaintTicks(true);
         stepRepaint.setPaintLabels(true);
-        stepRepaint.setBorder(BorderFactory.createTitledBorder("Шаг перерисовки(мс)"));
-        stepRepaint.addChangeListener(e -> sleepRepaint = stepRepaint.getValue());
+        stepRepaint.setBorder(BorderFactory.createTitledBorder("Шаг перерисовки(" + sleepSimulation + " мс)"));
+        stepRepaint.addChangeListener(e -> {
+            sleepRepaint = stepRepaint.getValue();
+            ((TitledBorder)stepRepaint.getBorder()).setTitle("Шаг перерисовки(" + sleepRepaint + " мс)");
+            stepRepaint.repaint();
+        });
 
         JSlider lightPower = new JSlider(20, 500);
         lightPower.setValue(Cell.lightPower);
@@ -92,20 +101,26 @@ public class Frame extends JFrame {
         lightPower.setMinorTickSpacing(10);
         lightPower.setPaintTicks(true);
         lightPower.setPaintLabels(true);
-        lightPower.setBorder(BorderFactory.createTitledBorder("Интенсивность света"));
+        lightPower.setBorder(BorderFactory.createTitledBorder("Интенсивность света(" + lightPower.getValue() + ")"));
         lightPower.addChangeListener(e -> {
             Cell.lightPower = lightPower.getValue();
             Cells.calcLightMap();
+            ((TitledBorder)lightPower.getBorder()).setTitle("Интенсивность света(" + lightPower.getValue() + ")");
+            lightPower.repaint();
         });
 
-        JSlider mutation = new JSlider(0, 30);
+        JSlider mutation = new JSlider(0, 50);
         mutation.setValue((int) (Cell.mutation * 100));
         mutation.setMajorTickSpacing(10);
         mutation.setMinorTickSpacing(1);
         mutation.setPaintTicks(true);
         mutation.setPaintLabels(true);
-        mutation.setBorder(BorderFactory.createTitledBorder("Шанс мутации"));
-        mutation.addChangeListener(e -> Cell.mutation = (float) mutation.getValue() / 100);
+        mutation.setBorder(BorderFactory.createTitledBorder("Шанс мутации(" + mutation.getValue() + "%)"));
+        mutation.addChangeListener(e -> {
+            Cell.mutation = (float) mutation.getValue() / 100;
+            ((TitledBorder)mutation.getBorder()).setTitle("Шанс мутации(" + mutation.getValue() + "%)");
+            mutation.repaint();
+        });
 
         JSlider peacefulpess = new JSlider(0, 20);
         peacefulpess.setValue(Cell.peacefulness);
@@ -113,8 +128,12 @@ public class Frame extends JFrame {
         peacefulpess.setMinorTickSpacing(1);
         peacefulpess.setPaintTicks(true);
         peacefulpess.setPaintLabels(true);
-        peacefulpess.setBorder(BorderFactory.createTitledBorder("Миролюбивость"));
-        peacefulpess.addChangeListener(e -> Cell.peacefulness = peacefulpess.getValue());
+        peacefulpess.setBorder(BorderFactory.createTitledBorder("Миролюбивость(" + peacefulpess.getValue() + ")"));
+        peacefulpess.addChangeListener(e -> {
+            Cell.peacefulness = peacefulpess.getValue();
+            ((TitledBorder)peacefulpess.getBorder()).setTitle("Миролюбивость(" + peacefulpess.getValue() + ")");
+            peacefulpess.repaint();
+        });
 
         JSlider energyLim = new JSlider(100, 2100);
         energyLim.setValue(Cell.energyLim);
@@ -122,36 +141,53 @@ public class Frame extends JFrame {
         energyLim.setMinorTickSpacing(100);
         energyLim.setPaintTicks(true);
         energyLim.setPaintLabels(true);
-        energyLim.setBorder(BorderFactory.createTitledBorder("Предел энергии"));
-        energyLim.addChangeListener(e -> Cell.energyLim = energyLim.getValue());
+        energyLim.setBorder(BorderFactory.createTitledBorder("Предел энергии(" + energyLim.getValue() + ")"));
+        energyLim.addChangeListener(e -> {
+            Cell.energyLim = energyLim.getValue();
+            ((TitledBorder)energyLim.getBorder()).setTitle("Предел энергии(" + energyLim.getValue() + ")");
+            energyLim.repaint();
+        });
 
-        JSlider energyGap = new JSlider(0, 500);
+        JSlider energyGap = new JSlider(0, 90);
         energyGap.setValue(Cell.energySptitDeathGap);
-        energyGap.setMajorTickSpacing(100);
+        energyGap.setMajorTickSpacing(20);
         energyGap.setMinorTickSpacing(10);
         energyGap.setPaintTicks(true);
         energyGap.setPaintLabels(true);
         energyGap.setBorder(BorderFactory.createTitledBorder("Зона размножения"));
-        energyGap.addChangeListener(e -> Cell.energySptitDeathGap = energyGap.getValue());
+        energyGap.addChangeListener(e -> {
+            Cell.energySptitDeathGap = energyGap.getValue();
+            ((TitledBorder)energyGap.getBorder()).setTitle("Зона размножения(" + energyGap.getValue() + "%)");
+            energyGap.repaint();
+        });
 
-        JSlider energyStep = new JSlider(0, 100);
+        JSlider energyStep = new JSlider(1, 100);
         energyStep.setValue(Cell.energyStep);
         energyStep.setMajorTickSpacing(10);
         energyStep.setMinorTickSpacing(2);
         energyStep.setPaintTicks(true);
         energyStep.setPaintLabels(true);
-        energyStep.setBorder(BorderFactory.createTitledBorder("Расход энергии за действие"));
-        energyStep.addChangeListener(e -> Cell.energyStep = energyStep.getValue());
+        energyStep.setBorder(BorderFactory.createTitledBorder("Расход энергии за действие(" + energyStep.getValue() + ")"));
+        energyStep.addChangeListener(e -> {
+            Cell.energyStep = energyStep.getValue();
+            ((TitledBorder)energyStep.getBorder()).setTitle("Расход энергии за действие(" + energyStep.getValue() + ")");
+            energyStep.repaint();
+        });
 
-
-        JSlider energyCadaver = new JSlider(50, 1050);
+        JSlider energyCadaver = new JSlider(50, 1001);
         energyCadaver.setValue(Cell.energyCadaver);
-        energyCadaver.setMajorTickSpacing(200);
-        energyCadaver.setMinorTickSpacing(10);
+        energyCadaver.setMajorTickSpacing(150);
+        energyCadaver.setMinorTickSpacing(100);
         energyCadaver.setPaintTicks(true);
         energyCadaver.setPaintLabels(true);
-        energyCadaver.setBorder(BorderFactory.createTitledBorder("Калорийность трупа"));
-        energyCadaver.addChangeListener(e -> Cell.energyCadaver = energyCadaver.getValue());
+        energyCadaver.setBorder(BorderFactory.createTitledBorder("Калорийность трупа(" + energyCadaver.getValue() + ")"));
+        energyCadaver.addChangeListener(e -> {
+            Cell.energyCadaver = energyCadaver.getValue();
+            ((TitledBorder)energyCadaver.getBorder()).setTitle("Калорийность трупа(" + energyCadaver.getValue() + ")");
+            energyCadaver.repaint();
+        });
+
+
 
         JPanel size = new JPanel(new GridBagLayout());
         size.setBorder(BorderFactory.createTitledBorder("Соотношение сторон"));
