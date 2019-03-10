@@ -5,6 +5,8 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -18,10 +20,12 @@ public class Frame extends JFrame {
     private int sleepSimulation = 0, sleepRepaint = 33, sleepLight = 33;
     private int count = 0;
     private JLabel info;
-    private boolean isRun = false, dynamicLight = false;
+    private boolean dynamicLight = false, isRun = false;
     private JTextField width, height;
     private PaintPanel paintPan;
-
+    private ExecutorService executor = Executors.newCachedThreadPool();
+    private TickTask tickTask = new TickTask();
+    private MoveLightTask moveLightTask = new MoveLightTask();
 
     private Frame() throws HeadlessException {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -40,10 +44,6 @@ public class Frame extends JFrame {
         setPreferredSize(new Dimension(1000, 800));
 
         setVisible(true);
-
-        new Thread(new TickTask()).start();
-        new Thread(new MoveLightTask()).start();
-        new Thread(new RepaintTask()).start();
     }
 
     private JPanel getInstrumentsPanel() {
@@ -212,16 +212,15 @@ public class Frame extends JFrame {
         });
 
 
-
         JRadioButton staticLightBtn = new JRadioButton("Статичный", !dynamicLight);
         JRadioButton dynamicLightBtn = new JRadioButton("Динамический", dynamicLight);
 
         ActionListener listener = e -> {
             if (dynamicLightBtn == e.getSource()) {
                 dynamicLight = true;
+                executor.execute(moveLightTask);
             } else {
                 dynamicLight = false;
-                Cells.calcLightMap();
             }
 
         };
@@ -296,6 +295,13 @@ public class Frame extends JFrame {
                 } else {
                     isRun = true;
                     start.setText("Пауза");
+
+                    executor.execute(tickTask);
+
+                    if (dynamicLight) {
+                        executor.execute(moveLightTask);
+                    }
+
                 }
             }
         });
@@ -347,25 +353,26 @@ public class Frame extends JFrame {
 
     private class TickTask implements Runnable {
 
+        private RepaintTask repaintTask = new RepaintTask();
+
         @Override
         public void run() {
-            while (true) {
+            executor.execute(repaintTask);
+            while (isRun) {
                 try {
                     Thread.sleep(sleepSimulation);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
 
-                if (isRun) {
-                    long start = System.currentTimeMillis();
+                long start = System.currentTimeMillis();
 
-                    lock.lock();
-                    Cells.DoTick();
-                    lock.unlock();
+                lock.lock();
+                Cells.DoTick();
+                lock.unlock();
 
-                    count++;
-                    updateInfo(System.currentTimeMillis() - start);
-                }
+                count++;
+                updateInfo(System.currentTimeMillis() - start);
             }
         }
     }
@@ -374,15 +381,13 @@ public class Frame extends JFrame {
 
         @Override
         public void run() {
-            while (true) {
+            while (isRun) {
                 try {
                     Thread.sleep(sleepRepaint);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if (isRun) {
-                    paintPan.repaint();
-                }
+                paintPan.repaint();
             }
         }
     }
@@ -391,16 +396,16 @@ public class Frame extends JFrame {
 
         @Override
         public void run() {
-            while (true) {
+            while (isRun && dynamicLight) {
                 try {
-                    if (dynamicLight) Thread.sleep(sleepLight);
-                    else Thread.sleep(200);
+                    Thread.sleep(sleepLight);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if (dynamicLight && isRun) {
-                    Cells.calcLightMapDynamic();
-                }
+                Cells.calcLightMapDynamic();
+            }
+            if (isRun) {
+                Cells.calcLightMap();
             }
         }
     }
