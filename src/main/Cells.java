@@ -18,7 +18,7 @@ class Cells {
 
         calcLightMap();
 
-        cells[x / 2][y / 2] = new Cell(x / 2, y / 2);
+        cells[x / 2][y / 2] = new CellActArray(x / 2, y / 2);
 
         queue = new LinkedList<>();
         queue.add(cells[x / 2][y / 2]);
@@ -36,8 +36,8 @@ class Cells {
                 int offX = Math.abs(x / 2 - xx);
                 int offY = Math.abs(y / 2 - yy);
                 int dist = (int) Math.sqrt(offX * offX + offY * offY);
-                if (dist < Cell.lightPower) {
-                    lightMap[xx][yy] = (short) (Cell.lightPower - dist);
+                if (dist < CellActArray.lightPower) {
+                    lightMap[xx][yy] = (short) (CellActArray.lightPower - dist);
                 } else {
                     lightMap[xx][yy] = 0;
                 }
@@ -55,8 +55,8 @@ class Cells {
                 int offX = x_0 - x;
                 int offY = y_0 - y;
                 int dist = (int) Math.sqrt(offX * offX + offY * offY);
-                if (dist < Cell.lightPower) {
-                    lightMap[x][y] = (short) (Cell.lightPower - dist);
+                if (dist < CellActArray.lightPower) {
+                    lightMap[x][y] = (short) (CellActArray.lightPower - dist);
                 } else {
                     lightMap[x][y] = 0;
                 }
@@ -85,7 +85,7 @@ class Cells {
                             queue.add(c);
                         }
                     } else {
-                        Cells.cells[c.x][c.y] = null;
+                        cells[c.x][c.y] = null;
                     }
 
                 }
@@ -113,7 +113,7 @@ class Cells {
         return cells[x][y];
     }
 
-    static void setCell(int x, int y, Cell cell) {
+    static void setCell(int x, int y, CellActArray cell) {
         cells[x][y] = cell;
     }
 }
