@@ -8,19 +8,15 @@ class CellActArray extends Cell {
 
     private byte dir;
     private boolean alive = true;
-    private int energy, index = 0;
+    private int energy;
+    private int index = 0;
     private byte[] acts;
     private int generation;
 
 
 
-    private static byte[][] dirs = new byte[][]{{0, 1}, {1, 0}, {1, 1}, {0, -1}, {-1, 0}, {-1, -1}, {1, -1}, {-1, 1}};
-    static int peacefulness = 10;
-    static float mutation = .08f;
-    static int lightPower = 150;
-    static int energyStep = 25;
-    static int energySplitDeathGap = 50;
-    static int energyLim = 1000;
+    private final static byte[][] dirs = new byte[][]{{0, 1}, {1, 0}, {1, 1}, {0, -1}, {-1, 0}, {-1, -1}, {1, -1}, {-1, 1}};
+
     private final static int geneLength = 60;
 
 
@@ -41,7 +37,7 @@ class CellActArray extends Cell {
         dir = (byte) Cells.random.nextInt(8);
         generation = parent.generation;
 
-        if (Cells.random.nextDouble() < mutation) {
+        if (Cells.random.nextDouble() < Cells.mutation) {
             generation = parent.generation + 1;
 
             double r = Cells.random.nextDouble();
@@ -87,7 +83,7 @@ class CellActArray extends Cell {
     public boolean act() {
         cycle:
         for (int count = 0; count < 20; count++) {
-            energy -= energyStep;
+            energy -= Cells.energyStep;
             switch (acts[Math.abs(index++ % acts.length)]) {
                 case 0:
                     grow();
@@ -114,15 +110,16 @@ class CellActArray extends Cell {
         }
 
 
-        if (energy >= (energyLim * energySplitDeathGap)/100) {
+        if (energy >= (Cells.energyLim * Cells.energySplitDeathGap)/100) {
             split();
         }
-        if (energy > energyLim) {
+        if (energy > Cells.energyLim) {
+            energy = Cells.energyLim;
             kill();
             return false;
         }
         if (energy < 0) {
-            energy = energyStep;
+            energy = Cells.energyStep;
             starve();
             return false;
         }
@@ -193,9 +190,11 @@ class CellActArray extends Cell {
                     if (isWeaker(c)) {
                         eatCell(c);
                         c.kill();
-                        step(newX, newY);
+                        c.erase();
+//                        step(newX, newY);
                     } else {
-                        c.eatCell(this);
+//                        c.eatCell(this);
+                        kill();
                         return true;
                     }
                 }
@@ -217,6 +216,10 @@ class CellActArray extends Cell {
         this.y = y;
     }
 
+    private void erase() {
+        Cells.setCell(this.x, this.y, null);
+    }
+
     public boolean isAlive() {
         return alive;
     }
@@ -232,15 +235,19 @@ class CellActArray extends Cell {
     }
 
     private boolean isRelative(CellActArray c) {
-        return peacefulness < Math.abs(c.generation - generation);
+        return Cells.peacefulness < Math.abs(c.generation - generation);
     }
 
     private boolean isWeaker(CellActArray c) {
-        return energy * acts.length > c.energy * c.acts.length;
+        return energy  > c.energy ;
     }
 
     private void eatCell(CellActArray c) {
         energy += c.energy;
     }
 
+    @Override
+    public String toString() {
+        return String.format("gen: %d energy: %d gene length: %d", generation, energy, acts.length);
+    }
 }

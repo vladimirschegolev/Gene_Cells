@@ -5,16 +5,23 @@ import java.util.*;
 
 class Cells {
     static Cell[][] cells;
-    static short[][] lightMap;
+    static float[][] lightMap;
     static Queue<Cell> queue;
     static Random random = new Random();
     private static int count;
     private static final double ROTATE_SPEED = Math.PI / 200;
 
+    static int peacefulness = 10;
+    static float mutation = .08f;
+    static int lightPower = 150;
+    static int energyStep = 25;
+    static int energySplitDeathGap = 50;
+    static int energyLim = 1000;
+
 
     static void init(int x, int y) {
         cells = new Cell[x][y];
-        lightMap = new short[x][y];
+        lightMap = new float[x][y];
 
         calcLightMap();
 
@@ -29,20 +36,21 @@ class Cells {
     }
 
     static void calcLightMap() {
-        int x = lightMap.length;
-        int y = lightMap[0].length;
-        for (int xx = 0; xx < x; xx++) {
-            for (int yy = 0; yy < y; yy++) {
-                int offX = Math.abs(x / 2 - xx);
-                int offY = Math.abs(y / 2 - yy);
-                int dist = (int) Math.sqrt(offX * offX + offY * offY);
-                if (dist < CellActArray.lightPower) {
-                    lightMap[xx][yy] = (short) (CellActArray.lightPower - dist);
-                } else {
-                    lightMap[xx][yy] = 0;
-                }
-            }
-        }
+        calcGaussMap(lightPower, lightMap.length / 2, lightMap[0].length / 2);
+//        int x = lightMap.length;
+//        int y = lightMap[0].length;
+//        for (int xx = 0; xx < x; xx++) {
+//            int offX = Math.abs(x / 2 - xx);
+//            for (int yy = 0; yy < y; yy++) {
+//                int offY = Math.abs(y / 2 - yy);
+//                float dist = (float) Math.sqrt(offX * offX + offY * offY);
+//                if (dist < lightPower) {
+//                    lightMap[xx][yy] =  (lightPower - dist);
+//                } else {
+//                    lightMap[xx][yy] = 0;
+//                }
+//            }
+//        }
     }
 
     static void calcLightMapDynamic() {
@@ -50,19 +58,31 @@ class Cells {
         int h = lightMap[0].length;
         int x_0 = (int) (w * (Math.sin(ROTATE_SPEED * count) + 2) / 4);
         int y_0 = (int) (h * (Math.cos(ROTATE_SPEED * count) + 2) / 4);
-        for (int x = 0; x < w; x++) {
-            for (int y = 0; y < h; y++) {
-                int offX = x_0 - x;
-                int offY = y_0 - y;
-                int dist = (int) Math.sqrt(offX * offX + offY * offY);
-                if (dist < CellActArray.lightPower) {
-                    lightMap[x][y] = (short) (CellActArray.lightPower - dist);
-                } else {
-                    lightMap[x][y] = 0;
-                }
+        calcGaussMap(lightPower, x_0, y_0);
+//        for (int x = 0; x < w; x++) {
+//            int offX = x_0 - x;
+//            for (int y = 0; y < h; y++) {
+//                int offY = y_0 - y;
+//                float dist = (float) Math.sqrt(offX * offX + offY * offY);
+//                if (dist < lightPower) {
+//                    lightMap[x][y] = (lightPower - dist);
+//                } else {
+//                    lightMap[x][y] = 0;
+//                }
+//            }
+//        }
+        count++;
+    }
+
+    private static void calcGaussMap(float sigma, int x_0, int y_0) {
+        double sigma2 = sigma * sigma;
+        for (int x = 0; x < lightMap.length; x++) {
+            int off_x = x_0 - x;
+            for (int y = 0; y < lightMap[x].length; y++) {
+                int off_y = y_0 - y;
+                lightMap[x][y] = (float) (sigma * Math.exp(-(off_x * off_x + off_y * off_y)/sigma2));
             }
         }
-        count++;
     }
 
     static int getWidth() {
@@ -74,7 +94,7 @@ class Cells {
     }
 
 
-    static void DoTick() {
+    static boolean DoTick() {
         if (queue.size() > 0) {
             int size = queue.size();
             for (int i = 0; i < size; i++) {
@@ -91,7 +111,9 @@ class Cells {
                 }
 
             }
-
+            return true;
+        } else {
+            return false;
         }
 
     }
@@ -113,7 +135,7 @@ class Cells {
         return cells[x][y];
     }
 
-    static void setCell(int x, int y, CellActArray cell) {
+    static void setCell(int x, int y, Cell cell) {
         cells[x][y] = cell;
     }
 }
