@@ -11,18 +11,30 @@ public class PaintPanel extends JPanel {
 
     PaintPanel() {
         super();
-        addMouseMotionListener(new MouseAdapter() {
+        MouseAdapter adapter = new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                pos = e.getPoint();
-                PaintPanel.this.repaint(0,0,getWidth(),50);
+                if (e.getModifiersEx() == MouseEvent.BUTTON1_DOWN_MASK) {
+                    pos = e.getPoint();
+                    PaintPanel.this.repaint(0, 0, getWidth(), 50);
+                } else {
+                    pos = null;
+                }
             }
 
             @Override
-            public void mouseMoved(MouseEvent e) {
-                pos = null;
+            public void mousePressed(MouseEvent e) {
+                if (e.getModifiersEx() == MouseEvent.BUTTON1_DOWN_MASK) {
+                    pos = e.getPoint();
+                    PaintPanel.this.repaint(0, 0, getWidth(), 50);
+                } else {
+                    pos = null;
+                }
             }
-        });
+        };
+
+        addMouseMotionListener(adapter);
+        addMouseListener(adapter);
     }
 
     @Override
@@ -60,12 +72,14 @@ public class PaintPanel extends JPanel {
         if (pos != null) {
             int x = (int) (pos.x / sizeX);
             int y = (int) (pos.y / sizeY);
-            g.setColor(Color.white);
-            g.drawString("Light power: " + Cells.lightMap[x][y], 10, 10);
-            if (Cells.hasCell(x, y)) {
-                Cell c = Cells.getCell(x,y);
-                g.setColor(c.color);
-                g.drawString(c.toString(), 10,20);
+            if (Cells.check(x, y)) {
+                g.setColor(Color.white);
+                g.drawString("Light power: " + Cells.lightMap[x][y], 10, 10);
+                if (Cells.hasCell(x, y)) {
+                    Cell c = Cells.getCell(x, y);
+                    g.setColor(c.color);
+                    g.drawString(c.toString(), 10, 20);
+                }
             }
         }
     }

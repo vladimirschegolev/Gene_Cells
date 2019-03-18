@@ -285,7 +285,17 @@ public class Frame extends JFrame {
             }
         });
 
-        JButton start = new JButton("Старт");
+        JButton start = new JButton("Старт") {
+            @Override
+            public void repaint() {
+                super.repaint();
+                if (isRun) {
+                    setText("Пауза");
+                } else {
+                    setText("Старт");
+                }
+            }
+        };
         start.addActionListener(new AbstractAction() {
 
 
@@ -293,10 +303,10 @@ public class Frame extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 if (isRun) {
                     isRun = false;
-                    start.setText("Старт");
+//                    start.setText("Старт");
                 } else {
                     isRun = true;
-                    start.setText("Пауза");
+//                    start.setText("Пауза");
 
                     executor.execute(tickTask);
 
@@ -402,7 +412,7 @@ public class Frame extends JFrame {
         public void run() {
             while (isRun && dynamicLight) {
                 try {
-                    Thread.sleep(sleepLight);
+                    Thread.sleep(sleepLight + sleepSimulation);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

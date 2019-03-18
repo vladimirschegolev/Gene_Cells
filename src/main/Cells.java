@@ -20,16 +20,17 @@ class Cells {
 
 
     static void init(int x, int y) {
+        random.setSeed(5454545);
         cells = new Cell[x][y];
         lightMap = new float[x][y];
 
         calcLightMap();
 
-        cells[x / 2][y / 2] = new CellActArray(x / 2, y / 2);
+        cells[x / 2][y / 2] = new CellGeneArray(x / 2, y / 2);
+//        cells[x / 2][y / 2] = new CellNeuro(x / 2, y / 2);
 
         queue = new LinkedList<>();
         queue.add(cells[x / 2][y / 2]);
-        random.setSeed(42);
 
         count = 0;
 
@@ -37,20 +38,6 @@ class Cells {
 
     static void calcLightMap() {
         calcGaussMap(lightPower, lightMap.length / 2, lightMap[0].length / 2);
-//        int x = lightMap.length;
-//        int y = lightMap[0].length;
-//        for (int xx = 0; xx < x; xx++) {
-//            int offX = Math.abs(x / 2 - xx);
-//            for (int yy = 0; yy < y; yy++) {
-//                int offY = Math.abs(y / 2 - yy);
-//                float dist = (float) Math.sqrt(offX * offX + offY * offY);
-//                if (dist < lightPower) {
-//                    lightMap[xx][yy] =  (lightPower - dist);
-//                } else {
-//                    lightMap[xx][yy] = 0;
-//                }
-//            }
-//        }
     }
 
     static void calcLightMapDynamic() {
@@ -59,18 +46,6 @@ class Cells {
         int x_0 = (int) (w * (Math.sin(ROTATE_SPEED * count) + 2) / 4);
         int y_0 = (int) (h * (Math.cos(ROTATE_SPEED * count) + 2) / 4);
         calcGaussMap(lightPower, x_0, y_0);
-//        for (int x = 0; x < w; x++) {
-//            int offX = x_0 - x;
-//            for (int y = 0; y < h; y++) {
-//                int offY = y_0 - y;
-//                float dist = (float) Math.sqrt(offX * offX + offY * offY);
-//                if (dist < lightPower) {
-//                    lightMap[x][y] = (lightPower - dist);
-//                } else {
-//                    lightMap[x][y] = 0;
-//                }
-//            }
-//        }
         count++;
     }
 
