@@ -6,7 +6,7 @@ import java.awt.event.*;
 
 
 public class PaintPanel extends JPanel {
-    private Point pos, off;
+    private Point pos, pick;
     private double off_x, off_y;
     private Cells cells;
     private double scale = 1;
@@ -15,7 +15,7 @@ public class PaintPanel extends JPanel {
         super();
         this.cells = cells;
         pos = new Point(0, 0);
-        off = new Point(0, 0);
+
         MouseAdapter adapter = new MouseAdapter() {
             Point prev;
 
@@ -28,8 +28,8 @@ public class PaintPanel extends JPanel {
             public void mouseDragged(MouseEvent e) {
                 pos = e.getPoint();
                 if (prev != null && e.getModifiersEx() == MouseEvent.BUTTON1_DOWN_MASK) {
-                    off_x += (double) (prev.x - e.getX()) / scale;
-                    off_y += (double) (prev.y - e.getY()) / scale;
+                    off_x -= (double) (prev.x - e.getX());
+                    off_y -= (double) (prev.y - e.getY());
                     prev = e.getPoint();
                 }
                 repaint();
@@ -44,8 +44,16 @@ public class PaintPanel extends JPanel {
                     int sizePanel = Math.max(getWidth(), getHeight()),
                             sizeCells = Math.max(cells.width, cells.height);
                     scale = ((float) sizePanel) / sizeCells;
-                    repaint();
                 }
+                if (e.getModifiersEx() == MouseEvent.BUTTON1_DOWN_MASK) {
+                    pick = new Point(0, 0);
+                    pick.x = (int) ((e.getX() - off_x)/scale);
+                    pick.y = (int) ((e.getY() - off_y)/scale);
+                }
+                if (e.getModifiersEx() == MouseEvent.BUTTON3_DOWN_MASK) {
+                    pick = null;
+                }
+                repaint();
             }
 
             @Override
@@ -57,8 +65,12 @@ public class PaintPanel extends JPanel {
             public void mouseWheelMoved(MouseWheelEvent e) {
                 if (e.getWheelRotation() < 0) {
                     scale *= 1.1;
+                    off_x = off_x - (pos.x - off_x)*.1;
+                    off_y = off_y - (pos.y - off_y)*.1;
                 } else {
                     scale /= 1.1;
+                    off_x = off_x + (pos.x - off_x)*(.1/1.1);
+                    off_y = off_y + (pos.y - off_y)*(.1/1.1);
                 }
                 repaint();
             }
@@ -85,25 +97,21 @@ public class PaintPanel extends JPanel {
         g2.fillRect(0, 0, getWidth(), getHeight());
 
         cells.repaint();
-        g2.translate( -off_x*scale,  -off_y *scale);
-        g2.drawImage(cells.getImage(), 0, 0, (int) (cells.width * scale), (int) (cells.height * scale), null);
-//        g2.translate(-off_x, -off_y);
+        g2.drawImage(cells.getImage(), ((int) off_x), (int) off_y, (int) (cells.width * scale), (int) (cells.height * scale), null);
 
-//        if (pos != null) {
-//            int x = (int) (pos.x / scale);
-//            int y = (int) (pos.y / scale);
-//            if (cells.checkOutBounds(x, y)) {
-//                g.setColor(Color.black);
-//                g.fillRect(0, 0, getWidth(), 30);
-//                g.setColor(Color.white);
-//                g.drawString("Light power: " + cells.lightMap[x][y], 10, 10);
-//                if (cells.hasCell(x, y)) {
-//                    Cell c = cells.getCell(x, y);
-//                    g.setColor(c.color);
-//                    g.drawString(c.toString(), 10, 20);
-//                }
-//            }
-//        }
+        if (pick != null) {
+            if (cells.checkBounds(pick.x, pick.y)) {
+                g.setColor(Color.black);
+                g.fillRect(0, 0, getWidth(), 25);
+                g.setColor(Color.white);
+                g.drawString("Light power: " + cells.lightMap[pick.x][pick.y], 10, 10);
+                if (cells.hasCell(pick.x, pick.y)) {
+                    Cell c = cells.getCell(pick.x, pick.y);
+                    g.setColor(new Color(c.color));
+                    g.drawString(c.toString(), 10, 20);
+                }
+            }
+        }
     }
 
 
