@@ -1,105 +1,158 @@
 package main;
 
-import java.awt.*;
+
 import java.util.Arrays;
 
 public class CellNeuro extends Cell {
 
     private final static byte[][] dirs = new byte[][]{{0, 1}, {1, 0}, {1, 1}, {0, -1}, {-1, 0}, {-1, -1}, {1, -1}, {-1, 1}};
-    private float[] input_light = new float[8];
-    private float[] input_cells = new float[8];
+    private final static int MAX_HIDDEN_SIZE = 10;
+    private final static float WEIGHT_SHIFT = .9999f;
+    private final static float WEIGHT_START = .9999f;
 
-    private float[] hidden = new float[8];
-    private float[] output = new float[9];
+    private float[] input = new float[17];
+    private float[] hidden;
+    private float[] output = new float[10];
 
-    private float[][] weights_light, weights_cells, weights_hidden;
+    private int mut1, mut2, mut3;
 
-    public CellNeuro(int x, int y) {
-        this.x = x;
-        this.y = y;
+    private float[][] weights_hidden, weights_input;
+
+    CellNeuro(int _x, int _y, Cells _cells) {
+        cells = _cells;
+        x = _x;
+        y = _y;
 
         energy = 100;
 
-        weights_light = new float[input_light.length][hidden.length];
-        fillRandom(weights_light);
+        mut1 = 0;
+        mut2 = 0;
+        mut3 = 0;
 
-        weights_cells = new float[input_cells.length][hidden.length];
-        fillRandom(weights_cells);
+        hidden = new float[1];
+
+        weights_input = new float[input.length][hidden.length];
+
+        for (int i = 0; i < input.length; i++) {
+            weights_input[i][0] = 1;
+        }
 
         weights_hidden = new float[hidden.length][output.length];
-        fillRandom(weights_hidden);
 
-        color = new Color(Cells.random.nextInt());
+        for (int i = 0; i < output.length - 1; i++) {
+            weights_hidden[0][i] = WEIGHT_START;
+        }
+        weights_hidden[0][8] = 1;
+
+        color = 0x00ff00;
     }
 
-    private CellNeuro(CellNeuro parent, int xx, int yy) {
-        x = xx;
-        y = yy;
+    private CellNeuro(CellNeuro parent, int new_x, int new_y) {
+        x = new_x;
+        y = new_y;
         generation = parent.generation;
-        if (Cells.random.nextFloat() > Cells.mutation) {
+        energy = parent.energy;
+        mut1 = parent.mut1;
+        mut2 = parent.mut2;
+        mut3 = parent.mut3;
+        if (cells.random.nextFloat() > cells.mutation) {
             weights_hidden = parent.weights_hidden;
-            weights_cells = parent.weights_cells;
-            weights_light = parent.weights_light;
+            weights_input = parent.weights_input;
+            hidden = parent.hidden;
             color = parent.color;
 
         } else {
             generation++;
-            weights_hidden = new float[parent.weights_hidden.length][parent.weights_hidden[0].length];
-            weights_cells = new float[parent.weights_cells.length][parent.weights_cells[0].length];
-            weights_light = new float[parent.weights_light.length][parent.weights_light[0].length];
-            for (int i = 0; i < parent.weights_hidden.length; i++) {
-                for (int j = 0; j < parent.weights_hidden[i].length; j++) {
-                    if (Cells.random.nextFloat() > Cells.mutation) {
-                        weights_hidden[i][j] = parent.weights_hidden[i][j];
-                    } else {
-                        if (Cells.random.nextBoolean()) {
-                            weights_hidden[i][j] = parent.weights_hidden[i][j] * 1.1f;
-                        } else {
-                            weights_hidden[i][j] = parent.weights_hidden[i][j] / 1.1f;
+            switch (cells.random.nextInt(3)) {
+                case 0:
+                    if (cells.random.nextBoolean() && parent.hidden.length < MAX_HIDDEN_SIZE - 1) {
+                        mut1++;
+                        hidden = new float[parent.hidden.length + 1];
+                        System.arraycopy(parent.hidden, 0, hidden, 0, parent.hidden.length);
+                        hidden[parent.hidden.length] = WEIGHT_START;
+
+                        weights_input = new float[input.length][hidden.length];
+
+                        for (int i = 0; i < input.length; i++) {
+                            for (int j = 0; j < hidden.length; j++) {
+                                if (j < parent.hidden.length) {
+                                    weights_input[i][j] = parent.weights_input[i][j];
+                                } else {
+                                    weights_input[i][j] = WEIGHT_START;
+                                }
+                            }
                         }
+
+                        weights_hidden = new float[hidden.length][output.length];
+
+                        for (int i = 0; i < hidden.length; i++) {
+                            for (int j = 0; j < output.length; j++) {
+                                if (i < parent.hidden.length) {
+                                    weights_hidden[i][j] = parent.weights_hidden[i][j];
+                                } else {
+                                    weights_hidden[i][j] = WEIGHT_START;
+                                }
+                            }
+                        }
+
+                        break;
+                    } else if (parent.hidden.length > 1 && parent.hidden.length < MAX_HIDDEN_SIZE - 1) {
+                        mut1++;
+                        hidden = new float[parent.hidden.length - 1];
+                        System.arraycopy(parent.hidden, 0, hidden, 0, hidden.length);
+
+                        weights_input = parent.weights_input;
+                        weights_hidden = parent.weights_hidden;
+
+                        break;
                     }
-                }
+                case 1:
+                    mut2++;
+                    hidden = parent.hidden;
+
+                    weights_input = parent.weights_input;
+
+                    weights_hidden = new float[hidden.length][output.length];
+
+                    mutArray(weights_hidden, parent.weights_hidden);
+
+                    break;
+                case 2:
+                    mut3++;
+                    hidden = parent.hidden;
+
+                    weights_hidden = parent.weights_hidden;
+
+                    weights_input = new float[input.length][hidden.length];
+
+                    mutArray(weights_input, parent.weights_input);
+
+                    break;
             }
 
-            for (int i = 0; i < parent.weights_cells.length; i++) {
-                for (int j = 0; j < parent.weights_cells[i].length; j++) {
-                    if (Cells.random.nextFloat() > Cells.mutation) {
-                        weights_cells[i][j] = parent.weights_cells[i][j];
-                    } else {
-                        if (Cells.random.nextBoolean()) {
-                            weights_cells[i][j] = parent.weights_cells[i][j] * 1.1f;
-                        } else {
-                            weights_cells[i][j] = parent.weights_cells[i][j] / 1.1f;
-                        }
-                    }
-                }
-            }
 
-            for (int i = 0; i < parent.weights_light.length; i++) {
-                for (int j = 0; j < parent.weights_light[i].length; j++) {
-                    if (Cells.random.nextFloat() > Cells.mutation) {
-                        weights_light[i][j] = parent.weights_light[i][j];
-                    } else {
-                        if (Cells.random.nextBoolean()) {
-                            weights_light[i][j] = parent.weights_light[i][j] * 1.1f;
-                        } else {
-                            weights_light[i][j] = parent.weights_light[i][j] / 1.1f;
-                        }
-                    }
-                }
-            }
-
-            color = new Color((int) (parent.color.getRGB() *  1.1));
+            calcColor(parent);
         }
     }
 
-    private void fillRandom(float[][] input) {
-        for (int i = 0; i < input.length; i++) {
-            for (int j = 0; j < input[i].length; j++) {
-                input[i][j] = Cells.random.nextFloat();
+    private void calcColor(CellNeuro parent) {
+        color = parent.color;
+        if (mut1 != parent.mut1) color += 15 << 16;
+        if (mut2 != parent.mut2) color += 15 << 8;
+        if (mut3 != parent.mut3) color += 15;
+    }
+
+    private void mutArray(float[][] target, float[][] source) {
+        for (int i = 0; i < target.length; i++) {
+            for (int j = 0; j < target[i].length; j++) {
+                if (cells.random.nextBoolean())
+                    target[i][j] = source[i][j] * WEIGHT_SHIFT;
+                else
+                    target[i][j] = source[i][j] / WEIGHT_SHIFT;
             }
         }
     }
+
 
     private void multVector(float[] vector, float[][] matrix, float[] target) {
         for (int i = 0; i < vector.length; i++) {
@@ -110,7 +163,7 @@ public class CellNeuro extends Cell {
 
     }
 
-    private void normalise(float[] input) {
+    private void normalize(float[] input) {
         float max = 0;
 
         for (float v : input) {
@@ -136,9 +189,11 @@ public class CellNeuro extends Cell {
         clean(hidden);
         clean(output);
 
-        multVector(input_light, weights_light, hidden);
-        multVector(input_cells, weights_cells, hidden);
-        normalise(hidden);
+        hidden = new float[hidden.length];
+        output = new float[output.length];
+
+        multVector(input, weights_input, hidden);
+        normalize(hidden);
         multVector(hidden, weights_hidden, output);
         float max = 0;
         int index = 8;
@@ -150,41 +205,63 @@ public class CellNeuro extends Cell {
         }
 
 
-
         if (index == 8) {
             grow();
-        } else {
-            if(move(index)) {
-                return false;
+        } else if (index == 9) {
+            float min = 100;
+            for (int i = 0; i < 8; i++) {
+                if (min > output[i]) {
+                    index = i;
+                    min = output[i];
+                }
             }
+            if (index < 8) share(index);
+        } else if (move(index)) {
+            return false;
         }
 
-        energy -= Cells.energyStep;
 
-        if (energy >= (Cells.energyLim * Cells.energySplitDeathGap) / 100) {
+        energy -= cells.energyStep;
+
+        if (energy >= (cells.energyLim * cells.energySplitDeathGap) / 100) {
             split();
         }
-        if (energy > Cells.energyLim) {
-            energy = Cells.energyLim;
+        if (energy > cells.energyLim) {
+            energy = cells.energyLim;
             kill();
             return false;
         }
         if (energy < 0) {
-            energy = Cells.energyStep;
+            energy = cells.energyStep;
             starve();
             return false;
         }
-        
-        
+
+
         return true;
     }
+
+    private void share(int index) {
+        int px = dirs[index][0] + x;
+        int py = dirs[index][1] + y;
+        if (cells.checkBounds(px, py)) {
+            if (cells.hasCell(px, py)) {
+                Cell c = cells.getCell(px, py);
+                if (c.isAlive()) {
+                    energy /= 2;
+                    c.energy += energy;
+                }
+            }
+        }
+    }
+
 
     private boolean move(int index) {
         int xx = dirs[index][0] + x;
         int yy = dirs[index][1] + y;
-        if (Cells.check(xx,yy)) {
-            if (Cells.hasCell(xx, yy)) {
-                CellNeuro c = (CellNeuro) Cells.getCell(xx, yy);
+        if (cells.checkBounds(xx, yy)) {
+            if (cells.hasCell(xx, yy)) {
+                CellNeuro c = (CellNeuro) cells.getCell(xx, yy);
                 if (c.isAlive()) {
                     if (!isRelative(c)) {
                         if (isWeaker(c)) {
@@ -211,66 +288,57 @@ public class CellNeuro extends Cell {
         for (int i = 0; i < dirs.length; i++) {
             int xx = dirs[i][0] + x;
             int yy = dirs[i][1] + y;
-            if (Cells.check(xx,yy)) {
-                input_light[i] = Cells.lightMap[xx][yy];
-                if (max < input_light[i]) max = input_light[i];
-                if (Cells.hasCell(xx,yy)) {
-                    Cell c = Cells.getCell(xx,yy);
+            if (cells.checkBounds(xx, yy)) {
+                input[i] = cells.lightMap[xx][yy];
+                if (max < input[i]) max = input[i];
+                if (cells.hasCell(xx, yy)) {
+                    Cell c = cells.getCell(xx, yy);
                     if (c.isAlive()) {
-                        if (isRelative(c)) {
-                            input_light[i] = -1;
-                        } else if (isWeaker(c)) {
-                            input_light[i] = 1;
-                        } else {
-                            input_light[i] = -1;
-                        }
+                        if (isRelative(c))
+                            input[i + 8] = -.5f;
+                        else
+                            input[i + 8] = energy / c.energy;
                     } else {
-                        input_cells[i] = 1;
+                        input[i + 8] = 1f;
                     }
                 } else {
-                    input_cells[i] = 0;
+                    input[i + 8] = 0f;
                 }
             } else {
-                input_light[i] = -1;
-                input_cells[i] = -1;
+                input[i] = -1f;
+                input[i + 8] = -1f;
             }
 
         }
-        for (int i = 0; i < input_light.length; i++) {
-            input_light[i] /= max;
+        for (int i = 0; i < 8; i++) {
+            input[i] /= max;
         }
+        input[16] = energy / cells.energyLim;
     }
 
     private void grow() {
-        energy += Cells.lightMap[x][y];
+        energy += cells.lightMap[x][y];
     }
-    
-    
-    private void split() {
 
-        for (int i = 0; i < 8; i++) {
-            int j = Cells.random.nextInt(8);
-            int xx = x + dirs[j][0];
-            int yy = y + dirs[j][1];
-            if (Cells.check(xx, yy) && !Cells.hasCell(xx, yy)) {
-                energy = (int) (energy * .4);
-                Cells.setCell(xx, yy, new CellNeuro(this, xx, yy));
-                Cells.queue.add(Cells.cells[xx][yy]);
-                return;
-            }
+
+    private void split() {
+        int[] free = getFreeCell();
+        if (free != null) {
+            energy = (int) (energy * .4);
+            cells.newCell(new CellNeuro(this, free[0], free[1]));
         }
     }
-    
+
     private boolean isWeaker(Cell c) {
         return c.energy < energy;
     }
 
     private boolean isRelative(Cell c) {
-        return Math.abs(c.generation - generation) < Cells.peacefulness;
+        return Math.abs(c.generation - generation) < cells.peacefulness;
     }
 
     @Override
     public String toString() {
-        return String.format("gen: %d energy: %f output: " + Arrays.toString(output), generation, energy);
+        return String.format("gen: %d energy: %f hidden: " + Arrays.toString(hidden), generation, energy);
     }
 }

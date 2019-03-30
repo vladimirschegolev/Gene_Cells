@@ -10,12 +10,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Created by Motoko on 09.03.2017.
- */
+
 public class Frame extends JFrame {
 
-    //    private static Frame frame;
+    private static Cells cells;
     private Lock lock = new ReentrantLock();
     private int sleepSimulation = 0, sleepRepaint = 33, sleepLight = 33;
     private int count = 0;
@@ -26,22 +24,23 @@ public class Frame extends JFrame {
     private ExecutorService executor = Executors.newCachedThreadPool();
     private TickTask tickTask = new TickTask();
     private MoveLightTask moveLightTask = new MoveLightTask();
+    private int choice = 0;
 
-    private Frame() throws HeadlessException {
+    private Frame() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(true);
         setTitle("Gene Cells");
         setLayout(new BorderLayout());
 
-        paintPan = new PaintPanel();
+        paintPan = new PaintPanel(cells);
 
         add(paintPan, BorderLayout.CENTER);
         add(getInstrumentsPanel(), BorderLayout.EAST);
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setMinimumSize(new Dimension(500, 500));
-        setBounds((screenSize.width - 1000) / 2, (screenSize.height - 800) / 2, 1000, 800);
-        setPreferredSize(new Dimension(1000, 800));
+        setBounds((screenSize.width - 1000) / 2, (screenSize.height - 900) / 2, 1000, 900);
+        setPreferredSize(new Dimension(1000, 900));
 
         setVisible(true);
     }
@@ -76,71 +75,72 @@ public class Frame extends JFrame {
 
 
         JSlider mutation = new JSlider(0, 50);
-        mutation.setValue((int) (Cells.mutation * 100));
+        mutation.setValue((int) (cells.mutation * 100));
         mutation.setMajorTickSpacing(10);
         mutation.setMinorTickSpacing(1);
         mutation.setPaintTicks(true);
         mutation.setPaintLabels(true);
         mutation.setBorder(BorderFactory.createTitledBorder("Шанс мутации " + mutation.getValue() + "%"));
         mutation.addChangeListener(e -> {
-            Cells.mutation = (float) mutation.getValue() / 100;
+            cells.mutation = (float) mutation.getValue() / 100;
             ((TitledBorder) mutation.getBorder()).setTitle("Шанс мутации " + mutation.getValue() + "%");
             mutation.repaint();
         });
 
         JSlider peacefulness = new JSlider(0, 20);
-        peacefulness.setValue(Cells.peacefulness);
+        peacefulness.setValue(cells.peacefulness);
         peacefulness.setMajorTickSpacing(10);
         peacefulness.setMinorTickSpacing(1);
         peacefulness.setPaintTicks(true);
         peacefulness.setPaintLabels(true);
         peacefulness.setBorder(BorderFactory.createTitledBorder("Миролюбивость " + peacefulness.getValue()));
         peacefulness.addChangeListener(e -> {
-            Cells.peacefulness = peacefulness.getValue();
+            cells.peacefulness = peacefulness.getValue();
             ((TitledBorder) peacefulness.getBorder()).setTitle("Миролюбивость " + peacefulness.getValue());
             peacefulness.repaint();
         });
 
-        JSlider energyLim = new JSlider(100, 2100);
-        energyLim.setValue(Cells.energyLim);
-        energyLim.setMajorTickSpacing(500);
-        energyLim.setMinorTickSpacing(100);
-        energyLim.setPaintTicks(true);
-        energyLim.setPaintLabels(true);
-        energyLim.setBorder(BorderFactory.createTitledBorder("Предел энергии " + energyLim.getValue()));
-        energyLim.addChangeListener(e -> {
-            Cells.energyLim = energyLim.getValue();
-            ((TitledBorder) energyLim.getBorder()).setTitle("Предел энергии " + energyLim.getValue());
-            energyLim.repaint();
+        String[] choices = new String[]{"Поколения", "Энергия"};
+
+        JComboBox<String> comboBox = new JComboBox<>(choices);
+        comboBox.setBorder(BorderFactory.createTitledBorder("Расцветка"));
+        comboBox.addItemListener(e -> {
+            if (choices[0].equals(e.getItem())) {
+                cells.setColorType(Cells.GENERATIONS);
+            } else if (choices[1].equals(e.getItem())) {
+                cells.setColorType(Cells.ENERGY);
+            }
         });
 
         JSlider energyGap = new JSlider(20, 100);
-        energyGap.setValue(Cells.energySplitDeathGap);
+        energyGap.setValue(cells.energySplitDeathGap);
         energyGap.setMajorTickSpacing(20);
         energyGap.setMinorTickSpacing(10);
         energyGap.setPaintTicks(true);
         energyGap.setPaintLabels(true);
         energyGap.setBorder(BorderFactory.createTitledBorder("Порог размножения " + energyGap.getValue() + "%"));
         energyGap.addChangeListener(e -> {
-            Cells.energySplitDeathGap = energyGap.getValue();
+            cells.energySplitDeathGap = energyGap.getValue();
             ((TitledBorder) energyGap.getBorder()).setTitle("Порог размножения " + energyGap.getValue() + "%");
             energyGap.repaint();
         });
 
         JSlider energyStep = new JSlider(1, 100);
-        energyStep.setValue(Cells.energyStep);
+        energyStep.setMinimumSize(new Dimension(200,80));
+        energyStep.setValue(cells.energyStep);
         energyStep.setMajorTickSpacing(10);
         energyStep.setMinorTickSpacing(2);
         energyStep.setPaintTicks(true);
         energyStep.setPaintLabels(true);
         energyStep.setBorder(BorderFactory.createTitledBorder("Расход энергии за действие " + energyStep.getValue()));
         energyStep.addChangeListener(e -> {
-            Cells.energyStep = energyStep.getValue();
+            cells.energyStep = energyStep.getValue();
             ((TitledBorder) energyStep.getBorder()).setTitle("Расход энергии за действие " + energyStep.getValue());
             energyStep.repaint();
         });
 
         info = new JLabel();
+        info.setMaximumSize(new Dimension(180, 80));
         updateInfo(0);
 
         JPanel instruments = new JPanel();
@@ -149,6 +149,7 @@ public class Frame extends JFrame {
         GridBagConstraints c = new GridBagConstraints();
 
         c.fill = GridBagConstraints.BOTH;
+
         c.ipady = 0;
         c.gridx = 0;
         c.gridy = 0;
@@ -164,15 +165,16 @@ public class Frame extends JFrame {
         c.gridy++;
         instruments.add(peacefulness, c);
         c.gridy++;
-        instruments.add(energyLim, c);
+        instruments.add(comboBox, c);
         c.gridy++;
         instruments.add(energyGap, c);
         c.gridy++;
         instruments.add(energyStep, c);
         c.gridy++;
+        c.insets = new Insets(0,10,0,10);
         instruments.add(info, c);
 
-        instruments.setPreferredSize(new Dimension(200, 200));
+        instruments.setPreferredSize(new Dimension(200, 500));
 
         return instruments;
     }
@@ -180,20 +182,20 @@ public class Frame extends JFrame {
     private JPanel getLightPanel() {
 
         JSlider sliderLightPower = new JSlider(20, 500);
-        sliderLightPower.setValue(Cells.lightPower);
+        sliderLightPower.setValue(cells.lightPower);
         sliderLightPower.setMajorTickSpacing(80);
         sliderLightPower.setMinorTickSpacing(10);
         sliderLightPower.setPaintTicks(true);
         sliderLightPower.setPaintLabels(true);
         sliderLightPower.setBorder(BorderFactory.createTitledBorder("Интенсивность " + sliderLightPower.getValue()));
         sliderLightPower.addChangeListener(e -> {
-            Cells.lightPower = sliderLightPower.getValue();
+            cells.lightPower = sliderLightPower.getValue();
 
             if (!dynamicLight) {
-                Cells.calcLightMap();
+                cells.calcLightMap();
             }
 
-            Cells.calcLightMap();
+            cells.calcLightMap();
             ((TitledBorder) sliderLightPower.getBorder()).setTitle("Интенсивность " + sliderLightPower.getValue());
             sliderLightPower.repaint();
             if (!isRun) paintPan.repaint();
@@ -201,7 +203,7 @@ public class Frame extends JFrame {
         });
 
         JSlider sliderRotationLight = new JSlider(1, 100);
-        sliderRotationLight.setValue(Cells.energyStep);
+        sliderRotationLight.setValue(cells.energyStep);
         sliderRotationLight.setMajorTickSpacing(10);
         sliderRotationLight.setMinorTickSpacing(2);
         sliderRotationLight.setPaintTicks(true);
@@ -214,8 +216,8 @@ public class Frame extends JFrame {
         });
 
 
-        JRadioButton staticLightBtn = new JRadioButton("Статичный", !dynamicLight);
-        JRadioButton dynamicLightBtn = new JRadioButton("Динамический", dynamicLight);
+        JRadioButton staticLightBtn = new JRadioButton("Статика", !dynamicLight);
+        JRadioButton dynamicLightBtn = new JRadioButton("Динамика", dynamicLight);
 
         ActionListener listener = e -> {
             if (dynamicLightBtn == e.getSource()) {
@@ -273,9 +275,9 @@ public class Frame extends JFrame {
                 try {
                     int x = Integer.valueOf(width.getText());
                     int y = Integer.valueOf(height.getText());
-                    Cells.init(x, y);
+                    cells.init(x, y, choice);
                 } catch (Exception ex) {
-                    Cells.init(Cells.getWidth(), Cells.getHeight());
+                    cells.init(cells.getWidth(), cells.getHeight(), choice);
                 }
 
                 Frame.this.repaint();
@@ -303,11 +305,8 @@ public class Frame extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 if (isRun) {
                     isRun = false;
-//                    start.setText("Старт");
                 } else {
                     isRun = true;
-//                    start.setText("Пауза");
-
                     executor.execute(tickTask);
 
                     if (dynamicLight) {
@@ -318,12 +317,23 @@ public class Frame extends JFrame {
             }
         });
 
+        String[] choices = new String[]{"Gene Cells", "Neuron Cells"};
+
+        JComboBox<String> comboBox = new JComboBox<>(choices);
+        comboBox.addItemListener(e -> {
+            if (choices[0].equals(e.getItem())) {
+                choice = 0;
+            } else if (choices[1].equals(e.getItem())) {
+                choice = 1;
+            }
+        });
+
         JPanel sizeAndButtons = new JPanel(new GridBagLayout());
         sizeAndButtons.setBorder(BorderFactory.createTitledBorder("Соотношение сторон"));
-        width = new JTextField(Cells.getWidth());
-        width.setText(String.valueOf(Cells.getWidth()));
-        height = new JTextField(Cells.getHeight());
-        height.setText(String.valueOf(Cells.getHeight()));
+        width = new JTextField(cells.getWidth());
+        width.setText(String.valueOf(cells.getWidth()));
+        height = new JTextField(cells.getHeight());
+        height.setText(String.valueOf(cells.getHeight()));
 
         GridBagConstraints c = new GridBagConstraints();
 
@@ -343,12 +353,17 @@ public class Frame extends JFrame {
         c.gridx = 1;
         sizeAndButtons.add(reset, c);
 
+        c.gridwidth = 2;
+        c.gridx = 0;
+        c.gridy = 2;
+        sizeAndButtons.add(comboBox, c);
+
         return sizeAndButtons;
     }
 
     private void updateInfo(long time) {
-        info.setText(String.format("<html> Итерация: %d<br>Количество клеток: %d<br>Время тика (мс): %d<html>",
-                count, Cells.queue.size(), time));
+        info.setText(String.format("<html>Итерация: %d<br>Количество клеток: %d<br>Время тика (мс): %d<html>",
+                count, cells.size(), time));
     }
 
 
@@ -359,7 +374,8 @@ public class Frame extends JFrame {
         } catch (Exception ignored) {
         }
 
-        Cells.init(500, 500);
+        cells = SingleThread.getInstance();
+        cells.init(600, 600, 0);
         new Frame();
     }
 
@@ -380,7 +396,7 @@ public class Frame extends JFrame {
                 long start = System.currentTimeMillis();
 
                 lock.lock();
-                if (!Cells.DoTick()) {
+                if (!cells.DoTick()) {
                     isRun = false;
                 }
                 lock.unlock();
@@ -416,10 +432,10 @@ public class Frame extends JFrame {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                Cells.calcLightMapDynamic();
+                cells.calcLightMapDynamic();
             }
             if (isRun) {
-                Cells.calcLightMap();
+                cells.calcLightMap();
             }
         }
     }
