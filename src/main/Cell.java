@@ -58,5 +58,5 @@ abstract class Cell {
         energy += c.energy;
     }
 
-
+    abstract int getComplexity();
 }

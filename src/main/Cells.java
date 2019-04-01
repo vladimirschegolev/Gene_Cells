@@ -9,6 +9,7 @@ abstract class Cells {
 
     public static final int GENERATIONS = 0;
     public static final int ENERGY = 1;
+    public static final int COMPLEXITY = 2;
     private static int colorType = 0;
 
     private final double ROTATE_SPEED = Math.PI / 200;
@@ -109,6 +110,8 @@ abstract class Cells {
                     } else if (colorType == ENERGY) {
                         int l = (int) (255 * cells_array[x][y].energy / energyLim);
                         image.buffer[x + subsum] = l  << 8 | 0x000700;
+                    }else if (colorType == COMPLEXITY) {
+                        image.buffer[x + subsum] = cells_array[x][y].getComplexity();
                     }
                 }
             }

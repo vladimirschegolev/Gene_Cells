@@ -100,7 +100,7 @@ public class Frame extends JFrame {
             peacefulness.repaint();
         });
 
-        String[] choices = new String[]{"Поколения", "Энергия"};
+        String[] choices = new String[]{"Поколения", "Энергия", "Сложность"};
 
         JComboBox<String> comboBox = new JComboBox<>(choices);
         comboBox.setBorder(BorderFactory.createTitledBorder("Расцветка"));
@@ -109,7 +109,10 @@ public class Frame extends JFrame {
                 cells.setColorType(Cells.GENERATIONS);
             } else if (choices[1].equals(e.getItem())) {
                 cells.setColorType(Cells.ENERGY);
+            }else if (choices[2].equals(e.getItem())) {
+                cells.setColorType(Cells.COMPLEXITY);
             }
+            if (!isRun) paintPan.repaint();
         });
 
         JSlider energyGap = new JSlider(20, 100);
@@ -195,7 +198,6 @@ public class Frame extends JFrame {
                 cells.calcLightMap();
             }
 
-            cells.calcLightMap();
             ((TitledBorder) sliderLightPower.getBorder()).setTitle("Интенсивность " + sliderLightPower.getValue());
             sliderLightPower.repaint();
             if (!isRun) paintPan.repaint();

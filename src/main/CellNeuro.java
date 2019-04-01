@@ -6,9 +6,9 @@ import java.util.Arrays;
 public class CellNeuro extends Cell {
 
     private final static byte[][] dirs = new byte[][]{{0, 1}, {1, 0}, {1, 1}, {0, -1}, {-1, 0}, {-1, -1}, {1, -1}, {-1, 1}};
-    private final static int MAX_HIDDEN_SIZE = 10;
+    private final static int MAX_HIDDEN_SIZE = 20;
     private final static float WEIGHT_SHIFT = .9999f;
-    private final static float WEIGHT_START = .9999f;
+    private final static float WEIGHT_START = .999f;
 
     private float[] input = new float[17];
     private float[] hidden;
@@ -137,20 +137,20 @@ public class CellNeuro extends Cell {
 
     private void calcColor(CellNeuro parent) {
         color = parent.color;
-        if (mut1 != parent.mut1) color += 15 << 16;
-        if (mut2 != parent.mut2) color += 15 << 8;
-        if (mut3 != parent.mut3) color += 15;
+        if (mut1 != parent.mut1) color += 21 << 16;
+        if (mut2 != parent.mut2) color += 21 << 8;
+        if (mut3 != parent.mut3) color += 21;
     }
 
     private void mutArray(float[][] target, float[][] source) {
+        int j = cells.random.nextInt(target[0].length);
         for (int i = 0; i < target.length; i++) {
-            for (int j = 0; j < target[i].length; j++) {
                 if (cells.random.nextBoolean())
                     target[i][j] = source[i][j] * WEIGHT_SHIFT;
                 else
                     target[i][j] = source[i][j] / WEIGHT_SHIFT;
             }
-        }
+
     }
 
 
@@ -221,7 +221,7 @@ public class CellNeuro extends Cell {
         }
 
 
-        energy -= cells.energyStep;
+        energy -= cells.energyStep * hidden.length;
 
         if (energy >= (cells.energyLim * cells.energySplitDeathGap) / 100) {
             split();
@@ -239,6 +239,12 @@ public class CellNeuro extends Cell {
 
 
         return true;
+    }
+
+    @Override
+    int getComplexity() {
+        int l = (int) ((255f * hidden.length) / MAX_HIDDEN_SIZE);
+        return (l  << 16) | 0x40;
     }
 
     private void share(int index) {

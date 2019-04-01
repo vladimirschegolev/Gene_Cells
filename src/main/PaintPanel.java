@@ -108,7 +108,9 @@ public class PaintPanel extends JPanel {
                 if (cells.hasCell(pick.x, pick.y)) {
                     Cell c = cells.getCell(pick.x, pick.y);
                     g.setColor(new Color(c.color));
-                    g.drawString(c.toString(), 10, 20);
+                    g.fillOval(8,13, 8,8);
+                    g.setColor(Color.white);
+                    g.drawString(c.toString(), 20, 20);
                 }
             }
         }

@@ -10,10 +10,10 @@ class CellGeneArray extends Cell {
     private int age = 0;
     private byte[] acts;
     private float aggression = 1;
-    private float aggression2 = aggression*aggression;
+    private float aggression2 = aggression * aggression;
 
 
-    private final static int MAX_GENE_LENGTH = 60;
+    private final static int MAX_GENE_LENGTH = 30;
 
 
     CellGeneArray(int _x, int _y, Cells _cells) {
@@ -63,7 +63,7 @@ class CellGeneArray extends Cell {
                 } else {
                     aggression /= .99f;
                 }
-                aggression2 = aggression *aggression2;
+                aggression2 = aggression * aggression2;
             }
             color = calcColor();
         } else {
@@ -74,15 +74,13 @@ class CellGeneArray extends Cell {
     }
 
     private byte getRandAct() {
-        return (byte) (cells.random.nextInt(11) - 5);
+        return (byte) (cells.random.nextInt(11));
     }
 
 
     private int calcColor() {
 
-        return ((acts.length * 15) & 0xff)
-                | ((200 - generation * 15) & 0xff) << 8
-                | (((int) (aggression * 100)) & 0xff) << 16;
+        return (((int) (aggression * 100)) & 0xff) << 16 | ((200 - generation * 23) & 0xff) << 8 | (int) ((255f * acts.length) / MAX_GENE_LENGTH);
     }
 
     public boolean act() {
@@ -141,6 +139,12 @@ class CellGeneArray extends Cell {
         }
 
         return true;
+    }
+
+    @Override
+    int getComplexity() {
+        int l = (int) ((255f * acts.length) / MAX_GENE_LENGTH);
+        return (l << 16) | 0x40;
     }
 
 
@@ -228,7 +232,7 @@ class CellGeneArray extends Cell {
     }
 
     private boolean isWeaker(CellGeneArray c) {
-        return energy*aggression > c.aggression*c.energy;
+        return aggression > c.aggression;
     }
 
 
