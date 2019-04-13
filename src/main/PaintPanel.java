@@ -83,11 +83,15 @@ public class PaintPanel extends JPanel {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                int sizePanel = Math.max(getWidth(), getHeight()),
-                        sizeCells = Math.max(cells.width, cells.height);
-                scale = ((float) sizePanel) / sizeCells;
+                recalcScale();
             }
         });
+    }
+
+    public void recalcScale() {
+        int sizePanel = Math.max(getWidth(), getHeight()),
+                sizeCells = Math.max(cells.width, cells.height);
+        scale = ((float) sizePanel) / sizeCells;
     }
 
     @Override
@@ -107,7 +111,7 @@ public class PaintPanel extends JPanel {
                 g.drawString("Light power: " + cells.lightMap[pick.x][pick.y], 10, 10);
                 if (cells.hasCell(pick.x, pick.y)) {
                     Cell c = cells.getCell(pick.x, pick.y);
-                    g.setColor(new Color(c.color));
+                    g.setColor(new Color(c.color_generation));
                     g.fillOval(8,13, 8,8);
                     g.setColor(Color.white);
                     g.drawString(c.toString(), 20, 20);

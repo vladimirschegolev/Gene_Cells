@@ -105,14 +105,7 @@ abstract class Cells {
                     int l = (int) (100 * lightMap[x][y] / lightPower);
                     image.buffer[x + subsum] = (l  << 16) | (l  << 8) | l;
                 } else {
-                    if (colorType == GENERATIONS) {
-                        image.buffer[x + subsum] = cells_array[x][y].color;
-                    } else if (colorType == ENERGY) {
-                        int l = (int) (255 * cells_array[x][y].energy / energyLim);
-                        image.buffer[x + subsum] = l  << 8 | 0x000700;
-                    }else if (colorType == COMPLEXITY) {
-                        image.buffer[x + subsum] = cells_array[x][y].getComplexity();
-                    }
+                    image.buffer[x + subsum] = cells_array[x][y].getColor(colorType);
                 }
             }
         }
@@ -120,5 +113,21 @@ abstract class Cells {
 
     void setColorType(int TYPE) {
         colorType = TYPE;
+    }
+
+    public int nextInt(int i) {
+        return random.nextInt(i);
+    }
+
+    public boolean nextBoolean() {
+        return random.nextBoolean();
+    }
+
+    public float nextFloat() {
+        return random.nextFloat();
+    }
+
+    public void setSeed(long s) {
+        random.setSeed(s);
     }
 }

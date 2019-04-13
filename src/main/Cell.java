@@ -11,8 +11,13 @@ abstract class Cell {
     int x, y;
     int generation;
     float energy;
-    int color;
+    int color_generation, color_complexity;
     private boolean alive = true;
+
+    final void init(Cells _cells) {
+        cells = _cells;
+    }
+    abstract void prepare();
 
     abstract boolean act();
 
@@ -28,7 +33,7 @@ abstract class Cell {
     }
 
     int[] getFreeCell() {
-        for (int i = 0, j = cells.random.nextInt(8); i < 8; i++, j++) {
+        for (int i = 0, j = cells.nextInt(8); i < 8; i++, j++) {
             int dir = j & 0b111;
             int new_x = x + Cell.DIRS[dir][0];
             int new_y = y + Cell.DIRS[dir][1];
@@ -46,17 +51,29 @@ abstract class Cell {
 
     void kill() {
         alive = false;
-        color = 0x444444;
+        color_generation = 0x444444;
     }
 
     void starve() {
         alive = false;
-        color = 0x222222;
+        color_generation = 0x222222;
     }
 
     void eatCell(Cell c) {
         energy += c.energy;
     }
 
-    abstract int getComplexity();
+//    abstract int getComplexity();
+
+    public int getColor(int colorType) {
+        if (colorType == Cells.GENERATIONS) {
+            return color_generation;
+        } else if (colorType == Cells.ENERGY) {
+            int l = (int) (255 * energy / cells.energyLim);
+            return l  << 8 | 0x000700;
+        }else if (colorType == Cells.COMPLEXITY) {
+            return color_complexity;
+        }
+        return 0;
+    }
 }

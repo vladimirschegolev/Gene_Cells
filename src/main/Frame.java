@@ -74,16 +74,16 @@ public class Frame extends JFrame {
         });
 
 
-        JSlider mutation = new JSlider(0, 50);
-        mutation.setValue((int) (cells.mutation * 100));
-        mutation.setMajorTickSpacing(10);
-        mutation.setMinorTickSpacing(1);
+        JSlider mutation = new JSlider(0, 500);
+        mutation.setValue((int) (cells.mutation * 1000));
+        mutation.setMajorTickSpacing(100);
+        mutation.setMinorTickSpacing(10);
         mutation.setPaintTicks(true);
         mutation.setPaintLabels(true);
-        mutation.setBorder(BorderFactory.createTitledBorder("Шанс мутации " + mutation.getValue() + "%"));
+        mutation.setBorder(BorderFactory.createTitledBorder(String.format("Уровень мутации %2.1f%%", mutation.getValue()/10f)));
         mutation.addChangeListener(e -> {
-            cells.mutation = (float) mutation.getValue() / 100;
-            ((TitledBorder) mutation.getBorder()).setTitle("Шанс мутации " + mutation.getValue() + "%");
+            cells.mutation = mutation.getValue() / 1000f;
+            ((TitledBorder) mutation.getBorder()).setTitle(String.format("Уровень мутации %2.1f%%", mutation.getValue()/10f));
             mutation.repaint();
         });
 
@@ -270,7 +270,7 @@ public class Frame extends JFrame {
     private JPanel getSizeAndButtonsPanel() {
 
         JButton reset = new JButton("Сброс");
-        reset.addActionListener(new AbstractAction() {
+        reset.addActionListener(new  AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 lock.lock();
@@ -285,6 +285,7 @@ public class Frame extends JFrame {
                 Frame.this.repaint();
                 count = 0;
                 updateInfo(0);
+                paintPan.recalcScale();
                 lock.unlock();
             }
         });
@@ -301,8 +302,6 @@ public class Frame extends JFrame {
             }
         };
         start.addActionListener(new AbstractAction() {
-
-
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (isRun) {
@@ -376,7 +375,7 @@ public class Frame extends JFrame {
         } catch (Exception ignored) {
         }
 
-        cells = SingleThread.getInstance();
+        cells = CellsParallel.getInstance();
         cells.init(600, 600, 0);
         new Frame();
     }
