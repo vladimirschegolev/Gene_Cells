@@ -100,7 +100,6 @@ public class PaintPanel extends JPanel {
         g2.setColor(Color.DARK_GRAY);
         g2.fillRect(0, 0, getWidth(), getHeight());
 
-        cells.repaint();
         g2.drawImage(cells.getImage(), ((int) off_x), (int) off_y, (int) (cells.width * scale), (int) (cells.height * scale), null);
 
         if (pick != null) {
@@ -111,7 +110,7 @@ public class PaintPanel extends JPanel {
                 g.drawString("Light power: " + cells.lightMap[pick.x][pick.y], 10, 10);
                 if (cells.hasCell(pick.x, pick.y)) {
                     Cell c = cells.getCell(pick.x, pick.y);
-                    g.setColor(new Color(c.color_generation));
+                    g.setColor(new Color(c.color_famity));
                     g.fillOval(8,13, 8,8);
                     g.setColor(Color.white);
                     g.drawString(c.toString(), 20, 20);

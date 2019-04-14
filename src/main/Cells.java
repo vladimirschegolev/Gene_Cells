@@ -7,14 +7,16 @@ import java.util.*;
 
 abstract class Cells {
 
-    public static final int GENERATIONS = 0;
+    public static final int FAMILY = 0;
     public static final int ENERGY = 1;
     public static final int COMPLEXITY = 2;
+    public static final int GENERATIONS = 3;
+    public static final int SPECIAL = 4;
     private static int colorType = 0;
 
     private final double ROTATE_SPEED = Math.PI / 200;
     float[][] lightMap;
-    Random random = new Random();
+    private Random random = new Random();
     int count;
     int width, height;
 
@@ -26,6 +28,7 @@ abstract class Cells {
     int energyStep = 25;
     int energySplitDeathGap = 50;
     int energyLim = 1000;
+    int maxAge = 100;
     Cell[][] cells_array;
 
 
@@ -72,6 +75,7 @@ abstract class Cells {
         count++;
     }
 
+
     boolean checkFree(int x, int y) {
         return checkBounds(x, y) && cells_array[x][y] == null;
     }
@@ -115,19 +119,19 @@ abstract class Cells {
         colorType = TYPE;
     }
 
-    public int nextInt(int i) {
+    int nextInt(int i) {
         return random.nextInt(i);
     }
 
-    public boolean nextBoolean() {
+    boolean nextBoolean() {
         return random.nextBoolean();
     }
 
-    public float nextFloat() {
+    float nextFloat() {
         return random.nextFloat();
     }
 
-    public void setSeed(long s) {
+    void setSeed(long s) {
         random.setSeed(s);
     }
 }

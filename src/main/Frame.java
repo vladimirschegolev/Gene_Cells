@@ -47,99 +47,121 @@ public class Frame extends JFrame {
 
     private JPanel getInstrumentsPanel() {
 
+        Dimension size = new Dimension(200, 50);
+
         JSlider stepSimulation = new JSlider(0, 100);
         stepSimulation.setValue(sleepSimulation);
-        stepSimulation.setMajorTickSpacing(10);
-        stepSimulation.setMinorTickSpacing(2);
+        stepSimulation.setMinorTickSpacing(4);
         stepSimulation.setPaintTicks(true);
-        stepSimulation.setPaintLabels(true);
-        stepSimulation.setBorder(BorderFactory.createTitledBorder("Шаг симуляции " + sleepSimulation + " мс"));
+        stepSimulation.setBorder(BorderFactory.createTitledBorder(String.format("Шаг симуляции %d мс",sleepSimulation)));
         stepSimulation.addChangeListener(e -> {
             sleepSimulation = stepSimulation.getValue();
-            ((TitledBorder) stepSimulation.getBorder()).setTitle("Шаг симуляции " + sleepSimulation + " мс");
+            ((TitledBorder) stepSimulation.getBorder()).setTitle(String.format("Шаг симуляции %d мс",sleepSimulation));
             stepSimulation.repaint();
         });
 
-        JSlider stepRepaint = new JSlider(10, 100);
-        stepRepaint.setValue(sleepRepaint);
-        stepRepaint.setMajorTickSpacing(10);
+        JSlider stepRepaint = new JSlider(1, 60);
+        stepRepaint.setValue(30);
         stepRepaint.setMinorTickSpacing(2);
         stepRepaint.setPaintTicks(true);
-        stepRepaint.setPaintLabels(true);
-        stepRepaint.setBorder(BorderFactory.createTitledBorder("Шаг перерисовки " + sleepRepaint + " мс"));
+        stepRepaint.setBorder(BorderFactory.createTitledBorder(String.format("Перерисовка %d fps",stepRepaint.getValue())));
         stepRepaint.addChangeListener(e -> {
-            sleepRepaint = stepRepaint.getValue();
-            ((TitledBorder) stepRepaint.getBorder()).setTitle("Шаг перерисовки " + sleepRepaint + " мс");
+            sleepRepaint = 1000/stepRepaint.getValue();
+            ((TitledBorder) stepRepaint.getBorder()).setTitle(String.format("Перерисовка %d fps",stepRepaint.getValue()));
             stepRepaint.repaint();
         });
 
 
         JSlider mutation = new JSlider(0, 500);
         mutation.setValue((int) (cells.mutation * 1000));
-        mutation.setMajorTickSpacing(100);
         mutation.setMinorTickSpacing(10);
         mutation.setPaintTicks(true);
-        mutation.setPaintLabels(true);
-        mutation.setBorder(BorderFactory.createTitledBorder(String.format("Уровень мутации %2.1f%%", mutation.getValue()/10f)));
+        mutation.setBorder(BorderFactory.createTitledBorder(String.format("Уровень мутации %2.1f%%", mutation.getValue() / 10f)));
         mutation.addChangeListener(e -> {
             cells.mutation = mutation.getValue() / 1000f;
-            ((TitledBorder) mutation.getBorder()).setTitle(String.format("Уровень мутации %2.1f%%", mutation.getValue()/10f));
+            ((TitledBorder) mutation.getBorder()).setTitle(String.format("Уровень мутации %2.1f%%", mutation.getValue() / 10f));
             mutation.repaint();
         });
 
         JSlider peacefulness = new JSlider(0, 20);
         peacefulness.setValue(cells.peacefulness);
-        peacefulness.setMajorTickSpacing(10);
         peacefulness.setMinorTickSpacing(1);
         peacefulness.setPaintTicks(true);
-        peacefulness.setPaintLabels(true);
-        peacefulness.setBorder(BorderFactory.createTitledBorder("Миролюбивость " + peacefulness.getValue()));
+        peacefulness.setBorder(BorderFactory.createTitledBorder(String.format("Миролюбивость %d",peacefulness.getValue())));
         peacefulness.addChangeListener(e -> {
             cells.peacefulness = peacefulness.getValue();
-            ((TitledBorder) peacefulness.getBorder()).setTitle("Миролюбивость " + peacefulness.getValue());
+            ((TitledBorder) peacefulness.getBorder()).setTitle(String.format("Миролюбивость %d",peacefulness.getValue()));
             peacefulness.repaint();
         });
 
-        String[] choices = new String[]{"Поколения", "Энергия", "Сложность"};
 
-        JComboBox<String> comboBox = new JComboBox<>(choices);
-        comboBox.setBorder(BorderFactory.createTitledBorder("Расцветка"));
-        comboBox.addItemListener(e -> {
-            if (choices[0].equals(e.getItem())) {
-                cells.setColorType(Cells.GENERATIONS);
-            } else if (choices[1].equals(e.getItem())) {
-                cells.setColorType(Cells.ENERGY);
-            }else if (choices[2].equals(e.getItem())) {
-                cells.setColorType(Cells.COMPLEXITY);
+        JSlider coloration = new JSlider(0, 4);
+        coloration.setValue(0);
+        coloration.setMajorTickSpacing(1);
+        coloration.setPaintTicks(true);
+        coloration.setBorder(BorderFactory.createTitledBorder("Расцветка: семья"));
+        coloration.addChangeListener(e -> {
+
+            cells.setColorType(coloration.getValue());
+
+            switch (coloration.getValue()) {
+                case Cells.FAMILY:
+                    ((TitledBorder) coloration.getBorder()).setTitle("Расцветка: семья");
+                    break;
+                case Cells.ENERGY:
+                    ((TitledBorder) coloration.getBorder()).setTitle("Расцветка: энергия");
+                    break;
+                case Cells.COMPLEXITY:
+                    ((TitledBorder) coloration.getBorder()).setTitle("Расцветка: сложность");
+                    break;
+                case Cells.GENERATIONS:
+                    ((TitledBorder) coloration.getBorder()).setTitle("Расцветка: поколения");
+                    break;
+                case Cells.SPECIAL:
+                    ((TitledBorder) coloration.getBorder()).setTitle("Расцветка: специальный");
+                    break;
             }
+            coloration.repaint();
             if (!isRun) paintPan.repaint();
         });
 
+
         JSlider energyGap = new JSlider(20, 100);
         energyGap.setValue(cells.energySplitDeathGap);
-        energyGap.setMajorTickSpacing(20);
-        energyGap.setMinorTickSpacing(10);
+        energyGap.setMinorTickSpacing(4);
         energyGap.setPaintTicks(true);
-        energyGap.setPaintLabels(true);
-        energyGap.setBorder(BorderFactory.createTitledBorder("Порог размножения " + energyGap.getValue() + "%"));
+        energyGap.setBorder(BorderFactory.createTitledBorder(String.format("Порог размножения %d%%",energyGap.getValue())));
         energyGap.addChangeListener(e -> {
             cells.energySplitDeathGap = energyGap.getValue();
-            ((TitledBorder) energyGap.getBorder()).setTitle("Порог размножения " + energyGap.getValue() + "%");
+            ((TitledBorder) energyGap.getBorder()).setTitle(String.format("Порог размножения %d%%",energyGap.getValue()));
             energyGap.repaint();
         });
 
         JSlider energyStep = new JSlider(1, 100);
-        energyStep.setMinimumSize(new Dimension(200,80));
+        energyStep.setMinimumSize(size);
         energyStep.setValue(cells.energyStep);
-        energyStep.setMajorTickSpacing(10);
-        energyStep.setMinorTickSpacing(2);
+        energyStep.setMinorTickSpacing(4);
         energyStep.setPaintTicks(true);
-        energyStep.setPaintLabels(true);
-        energyStep.setBorder(BorderFactory.createTitledBorder("Расход энергии за действие " + energyStep.getValue()));
+        energyStep.setBorder(BorderFactory.createTitledBorder(String.format("Расход энергии за действие %d",energyStep.getValue())));
         energyStep.addChangeListener(e -> {
             cells.energyStep = energyStep.getValue();
-            ((TitledBorder) energyStep.getBorder()).setTitle("Расход энергии за действие " + energyStep.getValue());
+            ((TitledBorder) energyStep.getBorder()).setTitle(String.format("Расход энергии за действие %d",energyStep.getValue()));
             energyStep.repaint();
+        });
+
+        JSlider maxAge = new JSlider(10, 201);
+        maxAge.setValue(cells.maxAge);
+        maxAge.setMinorTickSpacing(8);
+        maxAge.setPaintTicks(true);
+        maxAge.setBorder(BorderFactory.createTitledBorder(String.format("Максимальный возраст %d",maxAge.getValue())));
+        maxAge.addChangeListener(e -> {
+            cells.maxAge = maxAge.getValue();
+            if (maxAge.getValue() > 200) {
+                ((TitledBorder) maxAge.getBorder()).setTitle("Максимальный возраст -");
+            } else {
+                ((TitledBorder) maxAge.getBorder()).setTitle(String.format("Максимальный возраст %d",maxAge.getValue()));
+            }
+            maxAge.repaint();
         });
 
         info = new JLabel();
@@ -168,13 +190,15 @@ public class Frame extends JFrame {
         c.gridy++;
         instruments.add(peacefulness, c);
         c.gridy++;
-        instruments.add(comboBox, c);
+        instruments.add(coloration, c);
         c.gridy++;
         instruments.add(energyGap, c);
         c.gridy++;
         instruments.add(energyStep, c);
         c.gridy++;
-        c.insets = new Insets(0,10,0,10);
+        instruments.add(maxAge, c);
+        c.gridy++;
+        c.insets = new Insets(0, 10, 0, 10);
         instruments.add(info, c);
 
         instruments.setPreferredSize(new Dimension(200, 500));
@@ -186,11 +210,9 @@ public class Frame extends JFrame {
 
         JSlider sliderLightPower = new JSlider(20, 500);
         sliderLightPower.setValue(cells.lightPower);
-        sliderLightPower.setMajorTickSpacing(80);
-        sliderLightPower.setMinorTickSpacing(10);
+        sliderLightPower.setMinorTickSpacing(20);
         sliderLightPower.setPaintTicks(true);
-        sliderLightPower.setPaintLabels(true);
-        sliderLightPower.setBorder(BorderFactory.createTitledBorder("Интенсивность " + sliderLightPower.getValue()));
+        sliderLightPower.setBorder(BorderFactory.createTitledBorder(String.format("Интенсивность %d",cells.lightPower)));
         sliderLightPower.addChangeListener(e -> {
             cells.lightPower = sliderLightPower.getValue();
 
@@ -198,7 +220,7 @@ public class Frame extends JFrame {
                 cells.calcLightMap();
             }
 
-            ((TitledBorder) sliderLightPower.getBorder()).setTitle("Интенсивность " + sliderLightPower.getValue());
+            ((TitledBorder) sliderLightPower.getBorder()).setTitle(String.format("Интенсивность %d",cells.lightPower));
             sliderLightPower.repaint();
             if (!isRun) paintPan.repaint();
 
@@ -206,14 +228,12 @@ public class Frame extends JFrame {
 
         JSlider sliderRotationLight = new JSlider(1, 100);
         sliderRotationLight.setValue(cells.energyStep);
-        sliderRotationLight.setMajorTickSpacing(10);
-        sliderRotationLight.setMinorTickSpacing(2);
+        sliderRotationLight.setMinorTickSpacing(4);
         sliderRotationLight.setPaintTicks(true);
-        sliderRotationLight.setPaintLabels(true);
-        sliderRotationLight.setBorder(BorderFactory.createTitledBorder("Задержка вращения " + sleepLight));
+        sliderRotationLight.setBorder(BorderFactory.createTitledBorder(String.format("Задержка вращения %d ms",sleepLight)));
         sliderRotationLight.addChangeListener(e -> {
             sleepLight = sliderRotationLight.getValue();
-            ((TitledBorder) sliderRotationLight.getBorder()).setTitle("Задержка вращения " + sliderRotationLight.getValue());
+            ((TitledBorder) sliderRotationLight.getBorder()).setTitle(String.format("Задержка вращения %d ms",sleepLight));
             sliderRotationLight.repaint();
         });
 
@@ -270,7 +290,7 @@ public class Frame extends JFrame {
     private JPanel getSizeAndButtonsPanel() {
 
         JButton reset = new JButton("Сброс");
-        reset.addActionListener(new  AbstractAction() {
+        reset.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 lock.lock();
@@ -418,6 +438,7 @@ public class Frame extends JFrame {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                cells.repaint();
                 paintPan.repaint();
             }
         }

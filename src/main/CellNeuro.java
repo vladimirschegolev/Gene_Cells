@@ -45,8 +45,8 @@ public class CellNeuro extends Cell {
         }
         weights_hidden[0][8] = 1;
 
-        color_generation = 0x00ff00;
-        color_complexity = ((int) ((255f * hidden.length) / MAX_HIDDEN_SIZE) << 16) | 0x40;
+        color_famity = 0x00ff00;
+        calcColors();
     }
 
     private CellNeuro(CellNeuro parent, int new_x, int new_y) {
@@ -61,8 +61,7 @@ public class CellNeuro extends Cell {
             weights_hidden = parent.weights_hidden;
             weights_input = parent.weights_input;
             hidden = parent.hidden;
-            color_generation = parent.color_generation;
-            color_complexity = parent.color_complexity;
+            copyParentColors(parent);
         } else {
             generation++;
             switch (cells.nextInt(3)) {
@@ -133,26 +132,35 @@ public class CellNeuro extends Cell {
             }
 
 
-            calcColor(parent);
+            calcGenerationColor(parent);
         }
     }
 
-
-    private void calcColor(CellNeuro parent) {
-        color_generation = parent.color_generation;
-        if (mut1 != parent.mut1) color_generation += 21 << 16;
-        if (mut2 != parent.mut2) color_generation += 21 << 8;
-        if (mut3 != parent.mut3) color_generation += 21;
+    @Override
+    void calcColors() {
         color_complexity = ((int) ((255f * hidden.length) / MAX_HIDDEN_SIZE) << 16) | 0x40;
+        color_generations = cells.nextInt(0xffffff);
+        color_special = color_generations;
+
     }
+
+    private void calcGenerationColor(CellNeuro parent) {
+        color_famity = parent.color_famity;
+        if (mut1 != parent.mut1) color_famity += 21 << 16;
+        if (mut2 != parent.mut2) color_famity += 21 << 8;
+        if (mut3 != parent.mut3) color_famity += 21;
+        calcColors();
+    }
+
+
 
     private void mutArray(float[][] target, float[][] source) {
         for (int i = 0; i < target.length; i++) {
             for (int j = 0; j < target[i].length; j++) {
                 if (cells.nextBoolean())
-                    target[i][j] = source[i][j] * (1 - cells.mutation);
+                    target[i][j] = source[i][j] * (1 - cells.mutation / 10);
                 else
-                    target[i][j] = source[i][j] / (1 - cells.mutation);
+                    target[i][j] = source[i][j] / (1 - cells.mutation / 10);
             }
         }
     }
@@ -213,12 +221,6 @@ public class CellNeuro extends Cell {
 
     @Override
     boolean act() {
-
-//        if (age++ > 100) {
-//            kill();
-//            return false;
-//        }
-
         if (notReady) {
             prepare();
         }
@@ -241,20 +243,7 @@ public class CellNeuro extends Cell {
 
         energy -= cells.energyStep * hidden.length;
 
-        if (energy >= (cells.energyLim * cells.energySplitDeathGap) / 100) {
-            split();
-        }
-        if (energy > cells.energyLim) {
-            energy = cells.energyLim;
-            kill();
-            return false;
-        }
-        if (energy < 0) {
-            energy = cells.energyStep;
-            starve();
-            return false;
-        }
-        return true;
+        return checkStats();
     }
 
     private void share(int index) {
@@ -282,9 +271,9 @@ public class CellNeuro extends Cell {
                     if (!isRelative(c)) {
                         if (isWeaker(c)) {
                             eatCell(c);
-                            c.erase();
+                            c.eraseSelf();
                         } else {
-                            kill();
+                            c.eatCell(this);
                             return true;
                         }
                     }
@@ -339,7 +328,8 @@ public class CellNeuro extends Cell {
     }
 
 
-    private void split() {
+    @Override
+    void split() {
         int[] free = getFreeCell();
         if (free != null) {
             energy = (int) (energy * .4);

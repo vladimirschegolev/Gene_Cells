@@ -11,24 +11,26 @@ abstract class Cell {
     int x, y;
     int generation;
     float energy;
-    int color_generation, color_complexity;
+    int color_famity, color_complexity, color_special, color_generations;
     private boolean alive = true;
+    private int age;
 
     final void init(Cells _cells) {
         cells = _cells;
     }
+
     abstract void prepare();
 
     abstract boolean act();
 
     void step(int new_x, int new_y) {
-        cells.deleteCell(x, y);
+        eraseSelf();
         x = new_x;
         y = new_y;
         cells.setCell(this);
     }
 
-    void erase() {
+    void eraseSelf() {
         cells.deleteCell(x, y);
     }
 
@@ -45,34 +47,80 @@ abstract class Cell {
         return null;
     }
 
+    boolean checkStats() { //false is dead
+        if (energy >= (cells.energyLim * cells.energySplitDeathGap) / 100) {
+            split();
+        }
+        if (energy > cells.energyLim) {
+            energy = cells.energyLim;
+            kill();
+            return false;
+        }
+        if (energy <= 0) {
+            starve();
+            return false;
+        }
+        if (cells.maxAge < 200 && age++ > cells.maxAge) {
+            kill();
+            return false;
+        }
+
+        return true;
+    }
+
+    abstract void split();
+
     boolean isAlive() {
         return alive;
     }
 
-    void kill() {
+    private void kill() {
+        if (energy <= 0) eraseSelf();
         alive = false;
-        color_generation = 0x444444;
+        setAllColors(0x444444);
     }
 
-    void starve() {
+    private void starve() {
+        energy = cells.energyStep;
         alive = false;
-        color_generation = 0x222222;
+        setAllColors(0x222222);
     }
 
     void eatCell(Cell c) {
         energy += c.energy;
+        if (energy > cells.energyLim) energy = cells.energyLim;
+        c.eraseSelf();
     }
 
-//    abstract int getComplexity();
+    abstract void calcColors();
 
-    public int getColor(int colorType) {
-        if (colorType == Cells.GENERATIONS) {
-            return color_generation;
-        } else if (colorType == Cells.ENERGY) {
-            int l = (int) (255 * energy / cells.energyLim);
-            return l  << 8 | 0x000700;
-        }else if (colorType == Cells.COMPLEXITY) {
-            return color_complexity;
+    private void setAllColors(int c) {
+        color_famity = c;
+        color_complexity = c;
+        color_special = c;
+        color_generations = c;
+    }
+
+    void copyParentColors(Cell c) {
+        color_famity = c.color_famity;
+        color_complexity = c.color_complexity;
+        color_special = c.color_special;
+        color_generations = c.color_generations;
+    }
+
+    int getColor(int colorType) {
+        switch (colorType) {
+            case Cells.FAMILY:
+                return color_famity;
+            case Cells.ENERGY:
+                int l = (int) (255 * energy / cells.energyLim);
+                return l << 8 | 0x000700;
+            case Cells.COMPLEXITY:
+                return color_complexity;
+            case Cells.GENERATIONS:
+                return color_generations;
+            case Cells.SPECIAL:
+                return color_special;
         }
         return 0;
     }

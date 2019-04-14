@@ -7,7 +7,6 @@ import java.util.Arrays;
 class CellGeneArray extends Cell {
 
     private byte dir;
-    private int age = 0;
     private byte[] acts;
     private float aggression = 1;
     private float aggression2 = aggression * aggression;
@@ -15,7 +14,6 @@ class CellGeneArray extends Cell {
 
 
     private final static int MAX_GENE_LENGTH = 32;
-    private int index = 0;
 
 
     CellGeneArray(int _x, int _y, Cells _cells) {
@@ -25,7 +23,7 @@ class CellGeneArray extends Cell {
         energy = 50;
         dir = (byte) cells.nextInt(8);
         acts = new byte[]{0};
-        calcColor();
+        calcColors();
         generation = 1;
 
     }
@@ -67,11 +65,10 @@ class CellGeneArray extends Cell {
                 }
                 aggression2 = aggression * aggression2;
             }
-            calcColor();
+            calcColors();
         } else {
             acts = Arrays.copyOf(parent.acts, parent.acts.length);
-            color_generation = parent.color_generation;
-            color_complexity = parent.color_complexity;
+            copyParentColors(parent);
         }
 
     }
@@ -81,16 +78,20 @@ class CellGeneArray extends Cell {
     }
 
 
-    private void calcColor() {
-
-        color_generation = (((int) (aggression * 100)) & 0xff) << 16 | ((200 - generation * 23) & 0xff) << 8 | (int) ((255f * acts.length) / MAX_GENE_LENGTH);
+    @Override
+    void calcColors() {
+        color_famity = (((int) (aggression * 100)) & 0xff) << 16 | ((200 - generation * 23) & 0xff) << 8 | (int) ((255f * acts.length) / MAX_GENE_LENGTH);
         color_complexity = ((int) ((255f * acts.length) / MAX_GENE_LENGTH) << 16) | 0x40;
+        color_generations = cells.nextInt(0xffffff);
+        color_special = ((int) (125f * aggression2) & 0xff) << 16;
     }
+
+
 
     @Override
     void prepare() {
         int energy_minus = 0;
-        index = 0;
+        int index = 0;
         cycle:
         for (int count = 0; energy > 0 && count < 32; count++, index++) {
             energy_minus++;
@@ -124,7 +125,7 @@ class CellGeneArray extends Cell {
         notReady = false;
     }
 
-    public boolean act() {
+    public boolean act() { //false is dead
 
         if (notReady) {
             prepare();
@@ -137,32 +138,15 @@ class CellGeneArray extends Cell {
         move = false;
         notReady = true;
 
-        if (energy >= (cells.energyLim * cells.energySplitDeathGap) / 100) {
-            split();
-        }
-        if (energy > cells.energyLim) {
-            energy = cells.energyLim;
-            kill();
-            return false;
-        }
-        if (energy <= 0) {
-            energy = cells.energyStep;
-            starve();
-            return false;
-        }
-        if (age++ > 50) {
-            kill();
-            return false;
-        }
-
-        return true;
+        return checkStats();
     }
 
     private void grow() {
         energy += cells.lightMap[x][y] / aggression2;
     }
 
-    private void split() {
+    @Override
+    void split() {
 
         int[] free = getFreeCell();
         if (free != null) {
@@ -201,8 +185,7 @@ class CellGeneArray extends Cell {
         }
     }
 
-    private boolean move() {
-
+    private boolean move() { //true is dead
         int new_x = DIRS[dir][0] + this.x;
         int new_y = DIRS[dir][1] + this.y;
         if (!cells.checkBounds(new_x, new_y))
@@ -212,16 +195,11 @@ class CellGeneArray extends Cell {
             if (c.isAlive()) {
                 if (!isRelative(c)) {
                     if (isWeaker(c)) {
-                        if (bite(c)) {
-                            c.kill();
-                            c.erase();
-                            step(new_x, new_y);
-                        }
+                        eatCell(c);
+                        step(new_x, new_y);
                     } else {
-                        if (c.bite(this)) {
-                            kill();
-                            return true;
-                        }
+                        c.eatCell(this);
+                        return true;
                     }
                 }
             } else {
@@ -242,20 +220,20 @@ class CellGeneArray extends Cell {
     }
 
     private boolean isWeaker(CellGeneArray c) {
-        return aggression * energy > c.aggression * c.energy;
+        return aggression2 * energy > c.aggression2 * c.energy;
     }
 
 
-    private boolean bite(CellGeneArray c) {
-        float bite = 100 * aggression;
-        if (bite > c.energy) {
-            energy += c.energy;
-            return true;
-        }
-        energy += bite;
-        c.energy -= bite;
-        return false;
-    }
+//    private boolean bite(CellGeneArray c) {
+//        float bite = 100 * aggression2;
+//        if (bite > c.energy) {
+//            energy += c.energy;
+//            return true;
+//        }
+//        energy += bite;
+//        c.energy -= bite;
+//        return false;
+//    }
 
 
     @Override
