@@ -8,12 +8,16 @@ abstract class Cell {
     final static byte[][] DIRS = new byte[][]{{-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}};
     static Cells cells;
 
+    float aggression = 1;
+    float aggression2 = aggression * aggression;
+
     int x, y;
     int generation;
+    int mut1, mut2, mut3;
     float energy;
     int color_famity, color_complexity, color_special, color_generations;
     private boolean alive = true;
-    private int age;
+    protected int age;
 
     final void init(Cells _cells) {
         cells = _cells;
@@ -60,12 +64,16 @@ abstract class Cell {
             starve();
             return false;
         }
-        if (cells.maxAge < 200 && age++ > cells.maxAge) {
+        if (age++ > cells.maxAge && cells.maxAge <= 200) {
             kill();
             return false;
         }
 
         return true;
+    }
+
+    void grow() {
+        energy += cells.lightMap[x][y] / aggression;
     }
 
     abstract void split();
@@ -90,6 +98,17 @@ abstract class Cell {
         energy += c.energy;
         if (energy > cells.energyLim) energy = cells.energyLim;
         c.eraseSelf();
+    }
+
+    void calcNewColors(Cell parent) {
+        int parentGreen = (parent.color_famity >> 8) & 0xff;
+        int r = (mut1 * 10 & 0xff) << 16;
+        int g;
+        if (mut2 > parent.mut2) g = ((parentGreen + 10) & 0xff) << 8;
+        else g = parentGreen;
+        int b = (mut3 * 20 & 0xff);
+        color_famity = r | g | b;
+        calcColors();
     }
 
     abstract void calcColors();
@@ -121,7 +140,21 @@ abstract class Cell {
                 return color_generations;
             case Cells.SPECIAL:
                 return color_special;
+            case Cells.AGE:
+                if (alive) {
+                    int c = (int) (127f + 127f * Math.tanh((2f * age) / cells.maxAge - 1f));
+                    return c | 0x501000;
+                }
+                return color_famity;
         }
         return 0;
+    }
+
+    boolean isWeaker(Cell c) {
+        return aggression2 * energy > c.aggression2 * c.energy;
+    }
+
+    boolean isRelative(Cell c) { //true is relative
+        return Math.abs(mut1 - c.mut1) + Math.abs(mut2 - c.mut2) + Math.abs(mut3 - c.mut3) <= cells.peacefulness;
     }
 }

@@ -24,6 +24,7 @@ public class CellsParallel extends Cells {
 
         width = x;
         height = y;
+        this.type = type;
 
         calcLightMap();
         if (queue == null) queue = new ArrayDeque<>();

@@ -39,11 +39,7 @@ public class PaintPanel extends JPanel {
             public void mousePressed(MouseEvent e) {
                 prev = e.getPoint();
                 if (e.getModifiersEx() == MouseEvent.BUTTON2_DOWN_MASK) {
-                    off_x = 0;
-                    off_y = 0;
-                    int sizePanel = Math.max(getWidth(), getHeight()),
-                            sizeCells = Math.max(cells.width, cells.height);
-                    scale = ((float) sizePanel) / sizeCells;
+                    recalcScale();
                 }
                 if (e.getModifiersEx() == MouseEvent.BUTTON1_DOWN_MASK) {
                     pick = new Point(0, 0);
@@ -89,6 +85,8 @@ public class PaintPanel extends JPanel {
     }
 
     public void recalcScale() {
+        off_x = 0;
+        off_y = 0;
         int sizePanel = Math.max(getWidth(), getHeight()),
                 sizeCells = Math.max(cells.width, cells.height);
         scale = ((float) sizePanel) / sizeCells;

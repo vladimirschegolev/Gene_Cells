@@ -12,6 +12,8 @@ abstract class Cells {
     public static final int COMPLEXITY = 2;
     public static final int GENERATIONS = 3;
     public static final int SPECIAL = 4;
+    public static final int AGE = 5;
+
     private static int colorType = 0;
 
     private final double ROTATE_SPEED = Math.PI / 200;
@@ -29,6 +31,7 @@ abstract class Cells {
     int energySplitDeathGap = 50;
     int energyLim = 1000;
     int maxAge = 100;
+    int type = 0;
     Cell[][] cells_array;
 
 

@@ -1,20 +1,16 @@
 package main;
 
 
-import java.util.Arrays;
-
 public class CellNeuro extends Cell {
 
     private final static byte[][] dirs = new byte[][]{{0, 1}, {1, 0}, {1, 1}, {0, -1}, {-1, 0}, {-1, -1}, {1, -1}, {-1, 1}};
     private final static int MAX_HIDDEN_SIZE = 20;
     private final static float WEIGHT_START = .999f;
 
-    private float[] input = new float[17];
+    private float[] input = new float[18];
     private float[] hidden;
     private float[] output = new float[10];
     private float[][] weights_hidden, weights_input;
-
-    private int mut1, mut2, mut3;
 
     private boolean notReady = true;
     private int action;
@@ -45,29 +41,31 @@ public class CellNeuro extends Cell {
         }
         weights_hidden[0][8] = 1;
 
-        color_famity = 0x00ff00;
+        color_famity = 0x009900;
         calcColors();
     }
 
     private CellNeuro(CellNeuro parent, int new_x, int new_y) {
         x = new_x;
         y = new_y;
-        generation = parent.generation;
         energy = parent.energy;
+        generation = parent.generation;
+        aggression = parent.aggression;
         mut1 = parent.mut1;
         mut2 = parent.mut2;
         mut3 = parent.mut3;
         if (cells.nextFloat() > cells.mutation) {
             weights_hidden = parent.weights_hidden;
             weights_input = parent.weights_input;
-            hidden = parent.hidden;
+            hidden = new float[parent.hidden.length];
+            System.arraycopy(parent.hidden, 0, hidden, 0, parent.hidden.length);
             copyParentColors(parent);
         } else {
             generation++;
             switch (cells.nextInt(3)) {
                 case 0:
-                    if (cells.nextBoolean() && parent.hidden.length < MAX_HIDDEN_SIZE - 1) {
-                        mut1++;
+                    mut1++;
+                    if (parent.hidden.length == 1 || cells.nextBoolean() && parent.hidden.length < MAX_HIDDEN_SIZE - 1) {
                         hidden = new float[parent.hidden.length + 1];
                         System.arraycopy(parent.hidden, 0, hidden, 0, parent.hidden.length);
                         hidden[parent.hidden.length] = WEIGHT_START;
@@ -95,44 +93,44 @@ public class CellNeuro extends Cell {
                                 }
                             }
                         }
-
-                        break;
-                    } else if (parent.hidden.length > 1 && parent.hidden.length < MAX_HIDDEN_SIZE - 1) {
-                        mut1++;
+                    } else {
                         hidden = new float[parent.hidden.length - 1];
                         System.arraycopy(parent.hidden, 0, hidden, 0, hidden.length);
-
                         weights_input = parent.weights_input;
                         weights_hidden = parent.weights_hidden;
-
-                        break;
                     }
+                    break;
                 case 1:
                     mut2++;
-                    hidden = parent.hidden;
-
-                    weights_input = parent.weights_input;
-
-                    weights_hidden = new float[hidden.length][output.length];
-
-                    mutArray(weights_hidden, parent.weights_hidden);
-
+                    if (cells.nextBoolean()) {
+                        hidden = new float[parent.hidden.length];
+                        System.arraycopy(parent.hidden, 0, hidden, 0, parent.hidden.length);
+                        weights_input = parent.weights_input;
+                        weights_hidden = new float[hidden.length][output.length];
+                        mutArray(weights_hidden, parent.weights_hidden);
+                    } else {
+                        hidden = new float[parent.hidden.length];
+                        System.arraycopy(parent.hidden, 0, hidden, 0, parent.hidden.length);
+                        weights_hidden = parent.weights_hidden;
+                        weights_input = new float[input.length][hidden.length];
+                        mutArray(weights_input, parent.weights_input);
+                    }
                     break;
                 case 2:
                     mut3++;
-                    hidden = parent.hidden;
-
+                    hidden = new float[parent.hidden.length];
+                    System.arraycopy(parent.hidden, 0, hidden, 0, parent.hidden.length);
+                    weights_input = parent.weights_input;
                     weights_hidden = parent.weights_hidden;
-
-                    weights_input = new float[input.length][hidden.length];
-
-                    mutArray(weights_input, parent.weights_input);
-
+                    if (aggression < .5f || cells.nextBoolean() && aggression < 5) {
+                        aggression /= .9f;
+                    } else {
+                        aggression *= .9f;
+                    }
+                    aggression2 = aggression * aggression2;
                     break;
             }
-
-
-            calcGenerationColor(parent);
+            calcNewColors(parent);
         }
     }
 
@@ -140,19 +138,9 @@ public class CellNeuro extends Cell {
     void calcColors() {
         color_complexity = ((int) ((255f * hidden.length) / MAX_HIDDEN_SIZE) << 16) | 0x40;
         color_generations = cells.nextInt(0xffffff);
-        color_special = color_generations;
+        color_special = ((int) (127f + 127f * Math.tanh(aggression - 1)) & 0xff) << 16;
 
     }
-
-    private void calcGenerationColor(CellNeuro parent) {
-        color_famity = parent.color_famity;
-        if (mut1 != parent.mut1) color_famity += 21 << 16;
-        if (mut2 != parent.mut2) color_famity += 21 << 8;
-        if (mut3 != parent.mut3) color_famity += 21;
-        calcColors();
-    }
-
-
 
     private void mutArray(float[][] target, float[][] source) {
         for (int i = 0; i < target.length; i++) {
@@ -241,7 +229,7 @@ public class CellNeuro extends Cell {
         }
 
 
-        energy -= cells.energyStep * hidden.length;
+        energy -= cells.energyStep * aggression;
 
         return checkStats();
     }
@@ -321,12 +309,8 @@ public class CellNeuro extends Cell {
             input[i] /= max;
         }
         input[16] = energy / cells.energyLim;
+        input[17] = 1;
     }
-
-    private void grow() {
-        energy += cells.lightMap[x][y];
-    }
-
 
     @Override
     void split() {
@@ -337,17 +321,15 @@ public class CellNeuro extends Cell {
         }
     }
 
-    private boolean isWeaker(Cell cell) {
-        CellNeuro c = (CellNeuro) cell;
-        return energy > c.energy;
-    }
-
-    private boolean isRelative(Cell c) {
-        return Math.abs(c.generation - generation) < cells.peacefulness;
-    }
-
     @Override
     public String toString() {
-        return String.format("gen: %d energy: %f hidden: " + Arrays.toString(hidden), generation, energy);
+        StringBuilder array = new StringBuilder();
+        array.append('[');
+        for (float v : hidden) {
+            array.append(String.format("%2.1f|", v));
+        }
+        array.setCharAt(array.length() - 1, ']');
+        return String.format("gen: %d mut: %d %d %d age: %d aggression: %1.3f energy: %2.1f hidden: " + array.toString(),
+                generation, mut1, mut2, mut3, age, aggression, energy);
     }
 }
