@@ -41,7 +41,7 @@ public class CellNeuro extends Cell {
         }
         weights_hidden[0][8] = 1;
 
-        color_famity = 0x009900;
+        color_family = 0x009900;
         calcColors();
     }
 
@@ -208,7 +208,7 @@ public class CellNeuro extends Cell {
     }
 
     @Override
-    boolean act() {
+    public boolean act() {
         if (notReady) {
             prepare();
         }

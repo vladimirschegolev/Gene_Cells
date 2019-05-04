@@ -31,7 +31,8 @@ public class CellsParallel extends Cells {
         queue.clear();
 
         if (type == 0) newCell(new CellGeneArray(x / 2, y / 2, this));
-        else newCell(new CellNeuro(x / 2, y / 2, this));
+        else if (type == 1) newCell(new CellNeuro(x / 2, y / 2, this));
+        else newCell(new CellMutator(x / 2, y / 2, this));
 
         count = 0;
         repaint();

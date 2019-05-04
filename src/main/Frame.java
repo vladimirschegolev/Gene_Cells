@@ -20,11 +20,16 @@ public class Frame extends JFrame {
     private JLabel info;
     private boolean dynamicLight = false, isRun = false;
     private JTextField width, height;
-    private PaintPanel paintPan;
+    private ImagePainter paintPan;
     private ExecutorService executor = Executors.newCachedThreadPool();
     private TickTask tickTask = new TickTask();
     private MoveLightTask moveLightTask = new MoveLightTask();
     private int choice = 0;
+    private JSlider mutation;
+    private JSlider peacefulness;
+    private JSlider energyGap;
+    private JSlider energyStep;
+    private JSlider maxAge;
 
     private Frame() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -32,7 +37,7 @@ public class Frame extends JFrame {
         setTitle("Gene Cells");
         setLayout(new BorderLayout());
 
-        paintPan = new PaintPanel(cells);
+        paintPan = new ImagePainter(cells);
 
         add(paintPan, BorderLayout.CENTER);
         add(getInstrumentsPanel(), BorderLayout.EAST);
@@ -46,8 +51,6 @@ public class Frame extends JFrame {
     }
 
     private JPanel getInstrumentsPanel() {
-
-        Dimension size = new Dimension(200, 50);
 
         JSlider stepSimulation = new JSlider(0, 100);
         stepSimulation.setValue(sleepSimulation);
@@ -72,7 +75,41 @@ public class Frame extends JFrame {
         });
 
 
-        JSlider mutation = new JSlider(0, 500);
+        info = new JLabel();
+        info.setMaximumSize(new Dimension(180, 80));
+        updateInfo(0);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.fill = GridBagConstraints.BOTH;
+
+        c.ipady = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        panel.add(getStartPanel(), c);
+        c.gridy++;
+        panel.add(getLightPanel(), c);
+        c.gridy++;
+        panel.add(stepSimulation, c);
+        c.gridy++;
+        panel.add(stepRepaint, c);
+        c.gridy++;
+        panel.add(getCellSettingsPanel(), c);
+        c.gridy++;
+        c.insets = new Insets(0, 10, 0, 10);
+        panel.add(info, c);
+
+        panel.setPreferredSize(new Dimension(200, 500));
+
+        return panel;
+    }
+
+    private JPanel getCellSettingsPanel() {
+        Dimension size = new Dimension(200, 50);
+
+        mutation = new JSlider(0, 500);
         mutation.setValue((int) (cells.mutation * 1000));
         mutation.setMinorTickSpacing(10);
         mutation.setPaintTicks(true);
@@ -83,7 +120,7 @@ public class Frame extends JFrame {
             mutation.repaint();
         });
 
-        JSlider peacefulness = new JSlider(0, 20);
+        peacefulness = new JSlider(0, 20);
         peacefulness.setValue(cells.peacefulness);
         peacefulness.setMinorTickSpacing(1);
         peacefulness.setPaintTicks(true);
@@ -132,7 +169,7 @@ public class Frame extends JFrame {
         });
 
 
-        JSlider energyGap = new JSlider(20, 100);
+        energyGap = new JSlider(20, 100);
         energyGap.setValue(cells.energySplitDeathGap);
         energyGap.setMinorTickSpacing(4);
         energyGap.setPaintTicks(true);
@@ -143,7 +180,7 @@ public class Frame extends JFrame {
             energyGap.repaint();
         });
 
-        JSlider energyStep = new JSlider(1, 100);
+        energyStep = new JSlider(1, 100);
         energyStep.setMinimumSize(size);
         energyStep.setValue(cells.energyStep);
         energyStep.setMinorTickSpacing(4);
@@ -155,7 +192,7 @@ public class Frame extends JFrame {
             energyStep.repaint();
         });
 
-        JSlider maxAge = new JSlider(10, 201);
+        maxAge = new JSlider(10, 201);
         maxAge.setValue(cells.maxAge);
         maxAge.setMinorTickSpacing(8);
         maxAge.setPaintTicks(true);
@@ -170,13 +207,9 @@ public class Frame extends JFrame {
             maxAge.repaint();
         });
 
-        info = new JLabel();
-        info.setMaximumSize(new Dimension(180, 80));
-        updateInfo(0);
-
-        JPanel instruments = new JPanel();
-
-        instruments.setLayout(new GridBagLayout());
+        JPanel panel = new JPanel();
+        panel.setBorder(BorderFactory.createTitledBorder("Настройки клеток:"));
+        panel.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
         c.fill = GridBagConstraints.BOTH;
@@ -184,32 +217,20 @@ public class Frame extends JFrame {
         c.ipady = 0;
         c.gridx = 0;
         c.gridy = 0;
-        instruments.add(getSizeAndButtonsPanel(), c);
-        c.gridy++;
-        instruments.add(getLightPanel(), c);
-        c.gridy++;
-        instruments.add(stepSimulation, c);
-        c.gridy++;
-        instruments.add(stepRepaint, c);
-        c.gridy++;
-        instruments.add(mutation, c);
-        c.gridy++;
-        instruments.add(peacefulness, c);
-        c.gridy++;
-        instruments.add(coloration, c);
-        c.gridy++;
-        instruments.add(energyGap, c);
-        c.gridy++;
-        instruments.add(energyStep, c);
-        c.gridy++;
-        instruments.add(maxAge, c);
-        c.gridy++;
-        c.insets = new Insets(0, 10, 0, 10);
-        instruments.add(info, c);
 
-        instruments.setPreferredSize(new Dimension(200, 500));
+        panel.add(mutation, c);
+        c.gridy++;
+        panel.add(peacefulness, c);
+        c.gridy++;
+        panel.add(coloration, c);
+        c.gridy++;
+        panel.add(energyGap, c);
+        c.gridy++;
+        panel.add(energyStep, c);
+        c.gridy++;
+        panel.add(maxAge, c);
 
-        return instruments;
+        return panel;
     }
 
     private JPanel getLightPanel() {
@@ -293,7 +314,7 @@ public class Frame extends JFrame {
         return light;
     }
 
-    private JPanel getSizeAndButtonsPanel() {
+    private JPanel getStartPanel() {
 
         JButton reset = new JButton("Сброс");
         reset.addActionListener(new AbstractAction() {
@@ -304,6 +325,19 @@ public class Frame extends JFrame {
                     int x = Integer.valueOf(width.getText());
                     int y = Integer.valueOf(height.getText());
                     cells.init(x, y, choice);
+                    if (choice == 2) {
+                        mutation.setEnabled(false);
+                        peacefulness.setEnabled(false);
+                        energyGap.setEnabled(false);
+                        energyStep.setEnabled(false);
+                        maxAge.setEnabled(false);
+                    } else {
+                        mutation.setEnabled(true);
+                        peacefulness.setEnabled(true);
+                        energyGap.setEnabled(true);
+                        energyStep.setEnabled(true);
+                        maxAge.setEnabled(true);
+                    }
                 } catch (Exception ex) {
                     cells.init(cells.getWidth(), cells.getHeight(), choice);
                 }
@@ -344,7 +378,7 @@ public class Frame extends JFrame {
             }
         });
 
-        String[] choices = new String[]{"Gene Cells", "Neuron Cells"};
+        String[] choices = new String[]{"Gene Cells", "Neuron Cells", "Mutator"};
 
         JComboBox<String> comboBox = new JComboBox<>(choices);
         comboBox.addItemListener(e -> {
@@ -352,11 +386,13 @@ public class Frame extends JFrame {
                 choice = 0;
             } else if (choices[1].equals(e.getItem())) {
                 choice = 1;
+            } else if (choices[2].equals(e.getItem())) {
+                choice = 2;
             }
         });
 
-        JPanel sizeAndButtons = new JPanel(new GridBagLayout());
-        sizeAndButtons.setBorder(BorderFactory.createTitledBorder("Соотношение сторон"));
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("Соотношение сторон"));
         width = new JTextField(cells.getWidth());
         width.setText(String.valueOf(cells.getWidth()));
         height = new JTextField(cells.getHeight());
@@ -368,24 +404,24 @@ public class Frame extends JFrame {
         c.insets = new Insets(2, 2, 2, 2);
         c.gridx = 0;
         c.gridy = 0;
-        sizeAndButtons.add(width, c);
+        panel.add(width, c);
 
         c.gridx = 1;
-        sizeAndButtons.add(height, c);
+        panel.add(height, c);
 
         c.gridx = 0;
         c.gridy = 1;
-        sizeAndButtons.add(start, c);
+        panel.add(start, c);
 
         c.gridx = 1;
-        sizeAndButtons.add(reset, c);
+        panel.add(reset, c);
 
         c.gridwidth = 2;
         c.gridx = 0;
         c.gridy = 2;
-        sizeAndButtons.add(comboBox, c);
+        panel.add(comboBox, c);
 
-        return sizeAndButtons;
+        return panel;
     }
 
     private void updateInfo(long time) {
@@ -441,11 +477,9 @@ public class Frame extends JFrame {
             while (isRun) {
                 try {
                     Thread.sleep(sleepRepaint);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                cells.repaint();
-                paintPan.repaint();
+                    cells.repaint();
+                    paintPan.repaint();
+                } catch (InterruptedException | ArrayIndexOutOfBoundsException ignored) {}
             }
         }
     }

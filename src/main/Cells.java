@@ -7,12 +7,12 @@ import java.util.*;
 
 abstract class Cells {
 
-    public static final int FAMILY = 0;
-    public static final int ENERGY = 1;
-    public static final int COMPLEXITY = 2;
-    public static final int GENERATIONS = 3;
-    public static final int SPECIAL = 4;
-    public static final int AGE = 5;
+    static final int FAMILY = 0;
+    static final int ENERGY = 1;
+    static final int COMPLEXITY = 2;
+    static final int GENERATIONS = 3;
+    static final int SPECIAL = 4;
+    static final int AGE = 5;
 
     private static int colorType = 0;
 
@@ -110,9 +110,9 @@ abstract class Cells {
             for (int x = 0; x < cells_array.length; x++) {
                 if (cells_array[x][y] == null) {
                     int l = (int) (100 * lightMap[x][y] / lightPower);
-                    image.buffer[x + subsum] = (l  << 16) | (l  << 8) | l;
+                    image.array[x + subsum] = (l  << 16) | (l  << 8) | l;
                 } else {
-                    image.buffer[x + subsum] = cells_array[x][y].getColor(colorType);
+                    image.array[x + subsum] = cells_array[x][y].getColor(colorType);
                 }
             }
         }

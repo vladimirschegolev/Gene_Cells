@@ -1,17 +1,15 @@
 package main;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-
-public class PaintPanel extends JPanel {
+public class ImagePainter extends Container {
     private Point pos, pick;
     private double off_x, off_y;
     private Cells cells;
     private double scale = 1;
 
-    PaintPanel(Cells cells) {
+    ImagePainter(Cells cells) {
         super();
         this.cells = cells;
         pos = new Point(0, 0);
@@ -88,17 +86,20 @@ public class PaintPanel extends JPanel {
         off_x = 0;
         off_y = 0;
         int sizePanel = Math.max(getWidth(), getHeight()),
-                sizeCells = Math.max(cells.width, cells.height);
+                sizeCells = Math.max(cells.getImage().getWidth(), cells.getImage().getHeight());
         scale = ((float) sizePanel) / sizeCells;
     }
 
     @Override
-    public void paintComponent(Graphics g) {
+    public void paint(Graphics g) {
         Graphics2D g2 = (Graphics2D) g;
         g2.setColor(Color.DARK_GRAY);
         g2.fillRect(0, 0, getWidth(), getHeight());
 
-        g2.drawImage(cells.getImage(), ((int) off_x), (int) off_y, (int) (cells.width * scale), (int) (cells.height * scale), null);
+        g2.drawImage(cells.getImage(),
+                ((int) off_x), (int) off_y,
+                (int) (cells.getImage().getWidth() * scale), (int) (cells.getImage().getHeight() * scale),
+                null);
 
         if (pick != null) {
             if (cells.checkBounds(pick.x, pick.y)) {
@@ -108,7 +109,7 @@ public class PaintPanel extends JPanel {
                 g.drawString("Light power: " + cells.lightMap[pick.x][pick.y], 10, 10);
                 if (cells.hasCell(pick.x, pick.y)) {
                     Cell c = cells.getCell(pick.x, pick.y);
-                    g.setColor(new Color(c.color_famity));
+                    g.setColor(new Color(c.color_family));
                     g.fillOval(8,13, 8,8);
                     g.setColor(Color.white);
                     g.drawString(c.toString(), 20, 20);

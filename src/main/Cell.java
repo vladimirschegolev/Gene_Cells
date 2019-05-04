@@ -15,17 +15,21 @@ abstract class Cell {
     int generation;
     int mut1, mut2, mut3;
     float energy;
-    int color_famity, color_complexity, color_special, color_generations;
+    int color_family, color_complexity, color_special, color_generations;
     private boolean alive = true;
-    protected int age;
+    int age;
 
     final void init(Cells _cells) {
         cells = _cells;
     }
 
-    abstract void prepare();
+    public abstract void prepare();
 
-    abstract boolean act();
+    public abstract boolean act();
+
+    abstract void split();
+
+    abstract void calcColors();
 
     void step(int new_x, int new_y) {
         eraseSelf();
@@ -76,19 +80,18 @@ abstract class Cell {
         energy += cells.lightMap[x][y] / aggression;
     }
 
-    abstract void split();
 
-    boolean isAlive() {
+    public boolean isAlive() {
         return alive;
     }
 
-    private void kill() {
+    void kill() {
         if (energy <= 0) eraseSelf();
         alive = false;
         setAllColors(0x444444);
     }
 
-    private void starve() {
+    void starve() {
         energy = cells.energyStep;
         alive = false;
         setAllColors(0x222222);
@@ -101,36 +104,35 @@ abstract class Cell {
     }
 
     void calcNewColors(Cell parent) {
-        int parentGreen = (parent.color_famity >> 8) & 0xff;
+        int parentGreen = (parent.color_family >> 8) & 0xff;
         int r = (mut1 * 10 & 0xff) << 16;
         int g;
         if (mut2 > parent.mut2) g = ((parentGreen + 10) & 0xff) << 8;
         else g = parentGreen;
         int b = (mut3 * 20 & 0xff);
-        color_famity = r | g | b;
+        color_family = r | g | b;
         calcColors();
     }
 
-    abstract void calcColors();
 
     private void setAllColors(int c) {
-        color_famity = c;
+        color_family = c;
         color_complexity = c;
         color_special = c;
         color_generations = c;
     }
 
     void copyParentColors(Cell c) {
-        color_famity = c.color_famity;
+        color_family = c.color_family;
         color_complexity = c.color_complexity;
         color_special = c.color_special;
         color_generations = c.color_generations;
     }
 
-    int getColor(int colorType) {
+    public int getColor(int colorType) {
         switch (colorType) {
             case Cells.FAMILY:
-                return color_famity;
+                return color_family;
             case Cells.ENERGY:
                 int l = (int) (255 * energy / cells.energyLim);
                 return l << 8 | 0x000700;
@@ -142,10 +144,11 @@ abstract class Cell {
                 return color_special;
             case Cells.AGE:
                 if (alive) {
-                    int c = (int) (127f + 127f * Math.tanh((2f * age) / cells.maxAge - 1f));
+//                    int c = (int) (127f + 127f * Math.tanh(((float)age) / cells.maxAge - 1f));
+                    int c = (int) (255. * (1/(1 + Math.pow(300,.5 - ((float)age) / cells.maxAge))));
                     return c | 0x501000;
                 }
-                return color_famity;
+                return color_family;
         }
         return 0;
     }
