@@ -24,13 +24,13 @@ abstract class Cells {
 
     ImageData image;
 
-    int peacefulness = 10;
+    int peacefulness = 3;
     float mutation = .08f;
     int lightPower = 150;
     int energyStep = 25;
     int energySplitDeathGap = 50;
     int energyLim = 1000;
-    int maxAge = 100;
+    int maxAge = 200;
     int type = 0;
     Cell[][] cells_array;
 

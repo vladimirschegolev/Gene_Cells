@@ -196,7 +196,7 @@ public class Frame extends JFrame {
         maxAge.setValue(cells.maxAge);
         maxAge.setMinorTickSpacing(8);
         maxAge.setPaintTicks(true);
-        maxAge.setBorder(BorderFactory.createTitledBorder(String.format("Максимальный возраст %d", maxAge.getValue())));
+        maxAge.setBorder(BorderFactory.createTitledBorder("Максимальный возраст -"));
         maxAge.addChangeListener(e -> {
             cells.maxAge = maxAge.getValue();
             if (maxAge.getValue() > 200) {

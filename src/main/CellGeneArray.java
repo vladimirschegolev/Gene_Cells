@@ -153,6 +153,17 @@ class CellGeneArray extends Cell {
         }
     }
 
+    @Override
+    boolean isRelative(Cell c) {
+        CellGeneArray cc = (CellGeneArray) c;
+        int len = Math.min(acts.length, cc.acts.length);
+        int dif = Math.abs(acts.length - cc.acts.length);
+        for (int i = 0; i < len; i++) {
+            if (acts[i] != cc.acts[i]) dif++;
+        }
+        return dif <= cells.peacefulness;
+    }
+
     private int observe() {   // 0:good 2:wall/relative 4:darker 6:darker then energystep 8:danger
         int new_x = DIRS[dir][0] + x, new_y = DIRS[dir][1] + y;
 
