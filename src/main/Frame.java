@@ -398,6 +398,12 @@ public class Frame extends JFrame {
         height = new JTextField(cells.getHeight());
         height.setText(String.valueOf(cells.getHeight()));
 
+        JCheckBox parallel = new JCheckBox("parallel");
+        parallel.setEnabled(cells instanceof CellsParallel);
+        parallel.addActionListener(e -> {
+            ((CellsParallel) cells).parallel = !((CellsParallel) cells).parallel;
+        });
+
         GridBagConstraints c = new GridBagConstraints();
 
         c.fill = GridBagConstraints.BOTH;
@@ -420,6 +426,11 @@ public class Frame extends JFrame {
         c.gridx = 0;
         c.gridy = 2;
         panel.add(comboBox, c);
+
+        c.gridwidth = 2;
+        c.gridx = 0;
+        c.gridy = 3;
+        panel.add(parallel, c);
 
         return panel;
     }

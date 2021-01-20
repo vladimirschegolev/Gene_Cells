@@ -9,6 +9,8 @@ public class CellsParallel extends Cells {
 
     private Queue<Cell> queue;
 
+    public boolean parallel = false;
+
     static CellsParallel getInstance() {
         if (cells == null) {
             cells = new CellsParallel();
@@ -42,7 +44,7 @@ public class CellsParallel extends Cells {
         if (queue.size() > 0) {
             int size = queue.size();
 
-            if (queue.peek() instanceof CellNeuro)
+            if (parallel)
                 queue.parallelStream().forEach(Cell::prepare);
 
             for (int i = 0; i < size; i++) {
