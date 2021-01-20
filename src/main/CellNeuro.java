@@ -1,6 +1,8 @@
 package main;
 
 
+import java.util.Arrays;
+
 public class CellNeuro extends Cell {
 
     private final static byte[][] dirs = new byte[][]{{0, 1}, {1, 0}, {1, 1}, {0, -1}, {-1, 0}, {-1, -1}, {1, -1}, {-1, 1}};
@@ -178,9 +180,7 @@ public class CellNeuro extends Cell {
     }
 
     private void clean(float[] input) {
-        for (int i = 0; i < input.length; i++) {
-            input[i] = 0;
-        }
+        Arrays.fill(input, 0);
     }
 
     @Override
