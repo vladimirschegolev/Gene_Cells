@@ -28,7 +28,7 @@ public class CellNeuro extends Cell {
         mut2 = 0;
         mut3 = 0;
 
-        hidden = new float[1];
+        hidden = new float[2];
 
         weights_input = new float[input.length][hidden.length];
 
@@ -39,7 +39,7 @@ public class CellNeuro extends Cell {
         weights_hidden = new float[hidden.length][output.length];
 
         for (int i = 0; i < output.length - 1; i++) {
-            weights_hidden[0][i] = WEIGHT_START;
+            weights_hidden[0][i] = cells.nextFloat();
         }
         weights_hidden[0][8] = 1;
 
@@ -179,7 +179,7 @@ public class CellNeuro extends Cell {
 
     }
 
-    private void clean(float[] input) {
+    private void clear(float[] input) {
         Arrays.fill(input, 0);
     }
 
@@ -187,14 +187,12 @@ public class CellNeuro extends Cell {
     public void prepare() {
         observe();
 
-        clean(hidden);
-        clean(output);
-
-        hidden = new float[hidden.length];
-        output = new float[output.length];
+        clear(hidden);
+        clear(output);
 
         multVector(input, weights_input, hidden);
         normalize(hidden);
+        hidden[0] = 1;
         multVector(hidden, weights_hidden, output);
         float max = 0;
         action = 8;
